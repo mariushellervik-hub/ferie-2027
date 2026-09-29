@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Sommerferie i Sierksdorf 2027</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏖️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400..800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#12304a;--deep:#0b2033;--sand:#fbf3e4;--coral:#e8553a;--teal:#1f9e9a;--sun:#ffc53d;--bar:64px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--deep);color:var(--sand);font-family:'Nunito',Verdana,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#stage{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:calc(var(--bar) + env(safe-area-inset-bottom,0px));overflow:hidden;touch-action:pan-y}
+#deck{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);background:var(--navy)}
+/* slide content defaults (mirrors the slide format) */
+.slide{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;box-sizing:border-box;opacity:0;visibility:hidden;transition:opacity .55s ease,transform .55s ease,visibility 0s linear .55s}
+.slide.on{opacity:1;visibility:visible;transition:opacity .55s ease,transform .55s ease,visibility 0s}
+.slide[data-transition="push"]:not(.on){transform:translateX(90px)}
+.slide[data-transition="push"].was{transform:translateX(-90px)}
+.slide *{box-sizing:border-box;margin:0}
+.slide div{min-width:0}
+.slide div:not([style*="display"]){display:flex;flex-direction:column}
+.slide li{margin:0 0 6px}
+.slide a{color:inherit;text-decoration:underline;text-underline-offset:4px}
+.slide .yt{position:relative;cursor:pointer;transition:transform .15s ease,background-color .15s ease}
+.slide .yt a{text-decoration:none}
+.slide .yt a::after{content:"";position:absolute;inset:0;border-radius:999px}
+.slide .yt:hover{transform:scale(1.05);background-color:#ffc0b0!important}
+.slide a:focus-visible{outline:4px solid #e8553a;outline-offset:6px;border-radius:999px}
+.slide iframe.emb{pointer-events:none;background:transparent;display:block}
+[data-bi]{opacity:0}
+.slide.on [data-bi]{animation:.7s cubic-bezier(.2,.8,.2,1) var(--d,0s) both}
+.slide.on [data-bi="rise"]{animation-name:rise}
+.slide.on [data-bi="fade"]{animation-name:fade}
+.slide.on [data-bi="pop"]{animation-name:pop}
+@keyframes rise{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{0%{opacity:0;transform:scale(.7)}70%{opacity:1;transform:scale(1.05)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.slide,.slide.on{transition:none}.slide.on [data-bi]{animation:none;opacity:1}[data-bi]{opacity:1}}
+/* controls */
+#bar{position:fixed;left:0;right:0;bottom:0;height:calc(var(--bar) + env(safe-area-inset-bottom,0px));padding:0 16px env(safe-area-inset-bottom,0px);display:flex;align-items:center;gap:10px;background:var(--deep)}
+#progress{position:absolute;left:0;top:0;height:4px;background:var(--sun);transition:width .4s ease;border-radius:0 4px 4px 0}
+button{font:inherit;color:var(--sand);background:rgba(251,243,228,.08);border:1px solid rgba(251,243,228,.18);border-radius:999px;height:44px;min-width:44px;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:16px}
+button:hover{background:rgba(251,243,228,.16)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+button:disabled{opacity:.35;cursor:default}
+button svg{width:22px;height:22px}
+#count{font-family:'Fredoka','Trebuchet MS',sans-serif;font-size:18px;min-width:70px;text-align:center;font-variant-numeric:tabular-nums}
+#title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;opacity:.7}
+#notes{position:fixed;left:50%;bottom:calc(var(--bar) + 12px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);width:min(760px,calc(100% - 24px));max-height:45vh;overflow:auto;background:var(--sand);color:var(--navy);border-radius:20px;padding:20px 24px;font-size:17px;line-height:1.55;box-shadow:0 20px 60px rgba(0,0,0,.4);opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s linear .25s}
+#notes.open{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .25s,transform .25s}
+#notes h2{font-family:'Fredoka','Trebuchet MS',sans-serif;font-size:14px;font-weight:600;color:#13706d;margin:0 0 6px}
+#notes p{margin:0}
+#hint{position:fixed;left:0;right:0;text-align:center;font-size:15px;opacity:.75;padding:0 24px;display:none}
+@media (orientation:portrait) and (max-width:760px){#hint{display:block}#title{display:none}}
+@media (max-width:520px){#bar{gap:6px;padding-left:10px;padding-right:10px}.lbl{display:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main id="stage" aria-roledescription="presentasjon" aria-label="Sommerferie i Sierksdorf 2027">
+<div id="deck">
+<section class="slide" id="cover" data-transition="fade" style="background:linear-gradient(180deg, #fdf0da 0%, #ffe2bd 100%); color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px 128px 0px; display:flex; flex-direction:column; align-items:start; gap:24px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:0px; top:460px; width:1920px; height:620px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%}.w{animation:d linear infinite}.a{animation-duration:34s}.b{animation-duration:22s}.c{animation-duration:14s}@keyframes d{to{transform:translateX(-960px)}}.boat{transform-box:fill-box;transform-origin:50% 100%;animation:bob 4.5s ease-in-out infinite}@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(8px) rotate(2deg)}}.sun{transform-box:fill-box;transform-origin:center;animation:gl 5s ease-in-out infinite}@keyframes gl{50%{transform:scale(1.12)}}.gull{animation:fly 26s linear infinite}.g2{animation-duration:34s;animation-delay:-15s}@keyframes fly{from{transform:translate(-120px,0)}to{transform:translate(2100px,-60px)}}.drop{animation:tw 7s infinite}@keyframes tw{0%{transform:translateY(0);animation-timing-function:ease-in-out}48%{transform:translateY(-170px)}60%{transform:translateY(-170px);animation-timing-function:cubic-bezier(.7,0,1,1)}68%,100%{transform:translateY(0)}}.ball{animation:bn .9s cubic-bezier(.3,0,.7,1) infinite alternate}@keyframes bn{from{transform:translateY(0)}to{transform:translateY(-56px)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1920 620&quot; preserveAspectRatio=&quot;xMidYMax slice&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;radialGradient id=&quot;h&quot;&gt;&lt;stop offset=&quot;0&quot; stop-color=&quot;#ffd166&quot; stop-opacity=&quot;.75&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#ffd166&quot; stop-opacity=&quot;0&quot;/&gt;&lt;/radialGradient&gt;
+&lt;g id=&quot;k&quot;&gt;&lt;path d=&quot;M0 70V20Q40-12 80 20V70Z&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M6 32H74M6 46H74M6 60H74&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;6&quot;/&gt;&lt;rect x=&quot;-6&quot; y=&quot;66&quot; width=&quot;92&quot; height=&quot;10&quot; rx=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;/defs&gt;
+&lt;circle class=&quot;sun&quot; cx=&quot;1600&quot; cy=&quot;130&quot; r=&quot;180&quot; fill=&quot;url(#h)&quot;/&gt;
+&lt;circle cx=&quot;1600&quot; cy=&quot;130&quot; r=&quot;84&quot; fill=&quot;#ffc53d&quot;/&gt;
+&lt;g fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;&gt;&lt;g transform=&quot;translate(0 70)&quot;&gt;&lt;path class=&quot;gull&quot; d=&quot;M0 0q12-12 24 0q12-12 24 0&quot;/&gt;&lt;/g&gt;&lt;g transform=&quot;translate(0 140)&quot;&gt;&lt;path class=&quot;gull g2&quot; d=&quot;M0 0q9-9 18 0q9-9 18 0&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;path d=&quot;M0 262V240C140 224 300 228 420 234C560 242 700 238 860 262Z&quot; fill=&quot;#7fb59b&quot;/&gt;
+&lt;path d=&quot;M205 112V252M300 207V252M390 152V252M250 150L205 252M345 172L390 252&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot; opacity=&quot;.7&quot;/&gt;
+&lt;path id=&quot;trk&quot; d=&quot;M40 250H110C150 250 160 112 205 112C250 112 255 207 300 207C340 207 350 152 390 152C430 152 440 250 480 250H560&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;6&quot;/&gt;
+&lt;rect x=&quot;-15&quot; y=&quot;-17&quot; width=&quot;30&quot; height=&quot;13&quot; rx=&quot;4&quot; fill=&quot;#e8553a&quot;&gt;&lt;animateMotion dur=&quot;6s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#trk&quot;/&gt;&lt;/animateMotion&gt;&lt;/rect&gt;
+&lt;rect x=&quot;-15&quot; y=&quot;-17&quot; width=&quot;30&quot; height=&quot;13&quot; rx=&quot;4&quot; fill=&quot;#ffc53d&quot;&gt;&lt;animateMotion dur=&quot;6s&quot; begin=&quot;-0.18s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#trk&quot;/&gt;&lt;/animateMotion&gt;&lt;/rect&gt;
+&lt;rect x=&quot;650&quot; y=&quot;36&quot; width=&quot;14&quot; height=&quot;216&quot; fill=&quot;#12304a&quot;/&gt;&lt;rect x=&quot;643&quot; y=&quot;26&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;3&quot; fill=&quot;#e8553a&quot;/&gt;&lt;rect class=&quot;drop&quot; x=&quot;632&quot; y=&quot;224&quot; width=&quot;50&quot; height=&quot;16&quot; rx=&quot;5&quot; fill=&quot;#ffc53d&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;
+&lt;rect y=&quot;258&quot; width=&quot;1920&quot; height=&quot;362&quot; fill=&quot;#a9dcdb&quot;/&gt;
+&lt;g id=&quot;s1&quot;&gt;&lt;/g&gt;
+&lt;g class=&quot;boat&quot;&gt;&lt;path d=&quot;M1130 352H1250L1228 376H1152Z&quot; fill=&quot;#12304a&quot;/&gt;&lt;path d=&quot;M1190 354V250&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;4&quot;/&gt;&lt;path d=&quot;M1195 256V346H1252Z&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M1185 268V346H1142Z&quot; fill=&quot;#e8553a&quot;/&gt;&lt;/g&gt;
+&lt;g id=&quot;s2&quot;&gt;&lt;/g&gt;
+&lt;path d=&quot;M0 620V560C300 540 600 548 900 560C1200 572 1500 548 1920 556V620Z&quot; fill=&quot;#f1dcb2&quot;/&gt;
+&lt;use href=&quot;#k&quot; x=&quot;250&quot; y=&quot;484&quot;/&gt;&lt;use href=&quot;#k&quot; x=&quot;1700&quot; y=&quot;480&quot;/&gt;
+&lt;g transform=&quot;translate(520 548)&quot;&gt;&lt;g class=&quot;ball&quot;&gt;&lt;circle r=&quot;22&quot; fill=&quot;#fbf3e4&quot;/&gt;&lt;path d=&quot;M-22 0A22 22 0 0 1 0-22V22A22 22 0 0 1-22 0Z&quot; fill=&quot;#e8553a&quot;/&gt;&lt;path d=&quot;M0-22A22 22 0 0 1 22 0H0Z&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle r=&quot;22&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;/svg&gt;
+&lt;script&gt;function wv(g,y,a,p,c,k){var d=&#x27;M0 &#x27;+y;for(var x=0;x&lt;3840;x+=p)d+=&#x27; Q&#x27;+(x+p/4)+&#x27; &#x27;+(y-a)+&#x27; &#x27;+(x+p/2)+&#x27; &#x27;+y+&#x27; T&#x27;+(x+p)+&#x27; &#x27;+y;d+=&#x27; V620 H0Z&#x27;;var e=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);e.setAttribute(&#x27;d&#x27;,d);e.setAttribute(&#x27;fill&#x27;,c);e.setAttribute(&#x27;class&#x27;,&#x27;w &#x27;+k);document.getElementById(g).appendChild(e)}wv(&#x27;s1&#x27;,290,8,480,&#x27;#86cccb&#x27;,&#x27;a&#x27;);wv(&#x27;s2&#x27;,372,14,320,&#x27;#4fb3b2&#x27;,&#x27;b&#x27;);wv(&#x27;s2&#x27;,456,20,480,&#x27;#2a9491&#x27;,&#x27;c&#x27;);&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<p style="font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; background:#12304a; color:#fbf3e4; padding:10px 24px; border-radius:999px">Sommerferie 2027 · 1 uke · 5 personer</p>
+<h1 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:120px; font-weight:600; line-height:1.05; color:#12304a">En uke i Sierksdorf</h1>
+<p style="font-size:30px; line-height:1.4; width:1400px; color:#12304a">Østersjøen, fornøyelsespark ved stranden og dagsturer i alle retninger – for to voksne, en 12-åring, en 10-åring og en toåring.</p>
+
+</section>
+
+<section class="slide" id="kart" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:24px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:128px; top:128px; width:900px; height:800px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%;font-family:ui-rounded,&#x27;SF Pro Rounded&#x27;,&#x27;Segoe UI&#x27;,system-ui,sans-serif;font-size:30px}.t{font-weight:800;fill:#12304a;paint-order:stroke;stroke:#fbf3e4;stroke-width:7px;stroke-linejoin:round}.s{font-style:italic;font-weight:700;fill:#13706d}.pin{transform-box:fill-box;transform-origin:center;animation:pop .6s cubic-bezier(.3,1.7,.5,1) both}@keyframes pop{from{transform:scale(0)}}.fi{animation:fi .8s both}@keyframes fi{from{opacity:0}}.pu{transform-box:fill-box;transform-origin:center;animation:pu 3.6s ease-out infinite}@keyframes pu{from{transform:scale(.05);opacity:.9}to{transform:scale(1);opacity:0}}.wl{animation:wl 5s ease-in-out infinite alternate}@keyframes wl{to{transform:translateX(26px)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1000 889&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;clipPath id=&quot;c&quot;&gt;&lt;rect width=&quot;1000&quot; height=&quot;889&quot; rx=&quot;36&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;
+&lt;g clip-path=&quot;url(#c)&quot;&gt;
+&lt;rect width=&quot;1000&quot; height=&quot;889&quot; fill=&quot;#f3e3c3&quot;/&gt;
+&lt;polygon points=&quot;0,0 0,77 114,108 191,155 195,209 218,186 236,139 318,155 409,209 509,232 591,178 627,178 636,232 632,294 614,325 573,356 523,387 495,402 486,417 477,448 491,472 527,495 568,495 636,472 705,456 764,495 795,541 818,479 841,425 886,371 955,348 1000,340 1000,0&quot; fill=&quot;#bfe3e2&quot;/&gt;
+&lt;polygon points=&quot;582,139 614,101 645,62 705,70 727,116 691,147 636,155&quot; fill=&quot;#f3e3c3&quot;/&gt;
+&lt;ellipse cx=&quot;327&quot; cy=&quot;340&quot; rx=&quot;34&quot; ry=&quot;20&quot; fill=&quot;#bfe3e2&quot;/&gt;&lt;ellipse cx=&quot;800&quot; cy=&quot;690&quot; rx=&quot;14&quot; ry=&quot;52&quot; fill=&quot;#bfe3e2&quot;/&gt;
+&lt;path d=&quot;M0 700C60 760 100 800 132 812C180 830 240 860 300 889&quot; fill=&quot;none&quot; stroke=&quot;#bfe3e2&quot; stroke-width=&quot;12&quot;/&gt;
+&lt;path d=&quot;M132 812L300 680L450 564L470 480L486 410L560 320L620 240L627 180M450 564L620 560L795 541M132 812L180 560L195 216&quot; fill=&quot;none&quot; stroke=&quot;#d6bf90&quot; stroke-width=&quot;5&quot; stroke-dasharray=&quot;1 11&quot; stroke-linecap=&quot;round&quot;/&gt;
+&lt;path d=&quot;M620 180V152&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;g fill=&quot;none&quot; stroke=&quot;#8fcac9&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path class=&quot;wl&quot; d=&quot;M330 60q10-8 20 0t20 0t20 0&quot;/&gt;&lt;path class=&quot;wl&quot; style=&quot;animation-delay:-2s&quot; d=&quot;M430 110q10-8 20 0t20 0t20 0&quot;/&gt;&lt;path class=&quot;wl&quot; style=&quot;animation-delay:-1s&quot; d=&quot;M840 230q10-8 20 0t20 0t20 0&quot;/&gt;&lt;path class=&quot;wl&quot; style=&quot;animation-delay:-3s&quot; d=&quot;M880 120q10-8 20 0t20 0t20 0&quot;/&gt;&lt;/g&gt;
+&lt;text class=&quot;s&quot; x=&quot;720&quot; y=&quot;310&quot; font-size=&quot;40&quot;&gt;Østersjøen&lt;/text&gt;
+&lt;text class=&quot;s&quot; x=&quot;560&quot; y=&quot;445&quot;&gt;Lübecker Bucht&lt;/text&gt;
+&lt;circle class=&quot;pu&quot; cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;160&quot; fill=&quot;none&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;4&quot;/&gt;
+&lt;circle class=&quot;pu&quot; style=&quot;animation-delay:1.8s&quot; cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;160&quot; fill=&quot;none&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;4&quot;/&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:.8s&quot;&gt;&lt;circle cx=&quot;450&quot; cy=&quot;564&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:1s&quot;&gt;&lt;circle cx=&quot;532&quot; cy=&quot;495&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:1.2s&quot;&gt;&lt;circle cx=&quot;132&quot; cy=&quot;812&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:1.4s&quot;&gt;&lt;circle cx=&quot;195&quot; cy=&quot;216&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:1.6s&quot;&gt;&lt;circle cx=&quot;677&quot; cy=&quot;124&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:1.8s&quot;&gt;&lt;circle cx=&quot;777&quot; cy=&quot;750&quot; r=&quot;10&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:.9s&quot; x=&quot;434&quot; y=&quot;574&quot; text-anchor=&quot;end&quot;&gt;Lübeck&lt;/text&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:1.1s&quot; x=&quot;546&quot; y=&quot;530&quot;&gt;Travemünde&lt;/text&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:1.3s&quot; x=&quot;150&quot; y=&quot;822&quot;&gt;Hamburg&lt;/text&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:1.5s&quot; x=&quot;178&quot; y=&quot;226&quot; text-anchor=&quot;end&quot;&gt;Kiel&lt;/text&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:1.7s&quot; x=&quot;694&quot; y=&quot;104&quot;&gt;Fehmarn&lt;/text&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:1.9s&quot; x=&quot;795&quot; y=&quot;762&quot;&gt;Schwerin&lt;/text&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:.2s&quot;&gt;&lt;path transform=&quot;translate(486 410) scale(1.35)&quot; d=&quot;M0 -26L6.5 -8.9L24.7 -8L10.5 3.4L15.3 21L0 11L-15.3 21L-10.5 3.4L-24.7 -8L-6.5 -8.9Z&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;2.5&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/g&gt;
+&lt;text class=&quot;t fi&quot; style=&quot;animation-delay:.4s&quot; x=&quot;522&quot; y=&quot;404&quot; font-size=&quot;38&quot;&gt;Sierksdorf&lt;/text&gt;
+&lt;g transform=&quot;translate(830 846)&quot;&gt;&lt;path d=&quot;M0 0H139M0-8V8M139-8V8&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;4&quot;/&gt;&lt;text class=&quot;t&quot; x=&quot;70&quot; y=&quot;-14&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot;&gt;20 km&lt;/text&gt;&lt;/g&gt;
+&lt;/g&gt;&lt;/svg&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="position:absolute; left:1092px; top:128px; width:700px; font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Her ligger Sierksdorf</h2>
+<p style="position:absolute; left:1092px; top:310px; width:700px; font-size:30px; line-height:1.4">Liten badeby i Ostholstein, midt i Lübecker Bucht på Østersjøkysten.</p>
+<div data-bi="rise" style="--d:0.25s; position:absolute; left:1092px; top:434px; width:700px; display:flex; flex-direction:column; gap:4px">
+<p style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#d9482b">≈ 30 km</p>
+<p style="font-size:30px; line-height:1.4">nord for Lübeck</p>
+</div>
+<div data-bi="rise" style="--d:0.53s; position:absolute; left:1092px; top:588px; width:700px; display:flex; flex-direction:column; gap:4px">
+<p style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#d9482b">0 m</p>
+<p style="font-size:30px; line-height:1.4">fra stranden til Hansa-Park</p>
+</div>
+<div data-bi="rise" style="--d:0.81s; position:absolute; left:1092px; top:742px; width:700px; display:flex; flex-direction:column; gap:4px">
+<p style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#d9482b">≤ 2 t</p>
+<p style="font-size:30px; line-height:1.4">til Hamburg, Kiel og Fehmarn</p>
+</div>
+
+</section>
+
+<section class="slide" id="reise" data-transition="fade" style="background:#e3f1f0; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:32px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:128px; top:239px; width:1664px; height:400px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%;font-family:ui-rounded,&#x27;SF Pro Rounded&#x27;,&#x27;Segoe UI&#x27;,system-ui,sans-serif;font-size:26px}.l{font-weight:800;fill:#12304a;text-anchor:middle}.g{font-weight:700;fill:#13706d;text-anchor:middle;font-size:24px}.c{font-weight:800;fill:#fbf3e4;text-anchor:middle;font-size:24px;letter-spacing:2px}.nd{fill:#fbf3e4;stroke:#12304a;stroke-width:5}.bob{animation:bob 1.6s ease-in-out infinite alternate}@keyframes bob{to{transform:translateY(-4px)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1664 400&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;path id=&quot;st&quot; d=&quot;M0 -26L6.5 -8.9L24.7 -8L10.5 3.4L15.3 21L0 11L-15.3 21L-10.5 3.4L-24.7 -8L-6.5 -8.9Z&quot;/&gt;&lt;/defs&gt;
+&lt;rect x=&quot;0&quot; y=&quot;78&quot; width=&quot;120&quot; height=&quot;44&quot; rx=&quot;22&quot; fill=&quot;#12304a&quot;/&gt;&lt;text class=&quot;c&quot; x=&quot;60&quot; y=&quot;109&quot;&gt;BÅT&lt;/text&gt;
+&lt;path d=&quot;M190 100H380M1290 100H1540&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;6&quot;/&gt;
+&lt;path id=&quot;sa&quot; fill=&quot;none&quot; stroke=&quot;#2a9491&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;circle class=&quot;nd&quot; cx=&quot;190&quot; cy=&quot;100&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;380&quot; cy=&quot;100&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;1290&quot; cy=&quot;100&quot; r=&quot;13&quot;/&gt;
+&lt;use href=&quot;#st&quot; transform=&quot;translate(1540 100) scale(1.2)&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;2.5&quot;/&gt;
+&lt;text class=&quot;g&quot; x=&quot;835&quot; y=&quot;64&quot;&gt;Nattferje Oslo–Kiel&lt;/text&gt;&lt;text class=&quot;g&quot; x=&quot;1415&quot; y=&quot;76&quot;&gt;ca. 1 t bil&lt;/text&gt;
+&lt;text class=&quot;l&quot; x=&quot;190&quot; y=&quot;152&quot;&gt;Son&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;380&quot; y=&quot;152&quot;&gt;Oslo&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;1290&quot; y=&quot;152&quot;&gt;Kiel&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;1540&quot; y=&quot;156&quot;&gt;Sierksdorf&lt;/text&gt;
+&lt;g&gt;&lt;g class=&quot;bob&quot;&gt;&lt;path d=&quot;M-44-2H44L32 16H-32Z&quot; fill=&quot;#12304a&quot;/&gt;&lt;rect x=&quot;-28&quot; y=&quot;-20&quot; width=&quot;50&quot; height=&quot;18&quot; rx=&quot;3&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;rect x=&quot;4&quot; y=&quot;-36&quot; width=&quot;14&quot; height=&quot;16&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;&lt;animateMotion dur=&quot;10s&quot; repeatCount=&quot;indefinite&quot; path=&quot;M380 96H1290&quot;/&gt;&lt;/g&gt;
+&lt;rect x=&quot;0&quot; y=&quot;268&quot; width=&quot;120&quot; height=&quot;44&quot; rx=&quot;22&quot; fill=&quot;#12304a&quot;/&gt;&lt;text class=&quot;c&quot; x=&quot;60&quot; y=&quot;299&quot;&gt;BIL&lt;/text&gt;
+&lt;path d=&quot;M190 290H610M830 290H1060M1290 290H1540&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;6&quot;/&gt;
+&lt;path id=&quot;sb&quot; fill=&quot;none&quot; stroke=&quot;#2a9491&quot; stroke-width=&quot;5&quot;/&gt;&lt;path id=&quot;sc&quot; fill=&quot;none&quot; stroke=&quot;#2a9491&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;circle class=&quot;nd&quot; cx=&quot;190&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;400&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;610&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;830&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;1060&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;&lt;circle class=&quot;nd&quot; cx=&quot;1290&quot; cy=&quot;290&quot; r=&quot;13&quot;/&gt;
+&lt;use href=&quot;#st&quot; transform=&quot;translate(1540 290) scale(1.2)&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;2.5&quot;/&gt;
+&lt;text class=&quot;g&quot; x=&quot;720&quot; y=&quot;254&quot;&gt;ferje / bro&lt;/text&gt;&lt;text class=&quot;g&quot; x=&quot;1175&quot; y=&quot;254&quot;&gt;ferje 45 min&lt;/text&gt;
+&lt;text class=&quot;l&quot; x=&quot;190&quot; y=&quot;342&quot;&gt;Son&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;400&quot; y=&quot;342&quot;&gt;Göteborg&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;610&quot; y=&quot;342&quot;&gt;Helsingborg&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;830&quot; y=&quot;342&quot;&gt;København&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;1060&quot; y=&quot;342&quot;&gt;Rødby&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;1290&quot; y=&quot;342&quot;&gt;Puttgarden&lt;/text&gt;&lt;text class=&quot;l&quot; x=&quot;1540&quot; y=&quot;346&quot;&gt;Sierksdorf&lt;/text&gt;
+&lt;g&gt;&lt;g class=&quot;bob&quot;&gt;&lt;rect x=&quot;-38&quot; y=&quot;-28&quot; width=&quot;76&quot; height=&quot;22&quot; rx=&quot;7&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;rect x=&quot;-20&quot; y=&quot;-44&quot; width=&quot;40&quot; height=&quot;18&quot; rx=&quot;7&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;rect x=&quot;-14&quot; y=&quot;-40&quot; width=&quot;28&quot; height=&quot;9&quot; rx=&quot;3&quot; fill=&quot;#cfe9f2&quot;/&gt;&lt;rect x=&quot;-22&quot; y=&quot;-54&quot; width=&quot;44&quot; height=&quot;9&quot; rx=&quot;4&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;-20&quot; cy=&quot;-6&quot; r=&quot;9&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;20&quot; cy=&quot;-6&quot; r=&quot;9&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;animateMotion dur=&quot;12s&quot; repeatCount=&quot;indefinite&quot; path=&quot;M190 286H1540&quot;/&gt;&lt;/g&gt;
+&lt;/svg&gt;
+&lt;script&gt;function wv(x1,x2,y){var n=Math.round((x2-x1)/40),p=(x2-x1)/n,d=&#x27;M&#x27;+x1+&#x27; &#x27;+y;for(var i=0;i&lt;n;i++)d+=&#x27; q&#x27;+p/4+&#x27; -9 &#x27;+p/2+&#x27; 0 t&#x27;+p/2+&#x27; 0&#x27;;return d}document.getElementById(&#x27;sa&#x27;).setAttribute(&#x27;d&#x27;,wv(380,1290,100));document.getElementById(&#x27;sb&#x27;).setAttribute(&#x27;d&#x27;,wv(610,830,290));document.getElementById(&#x27;sc&#x27;).setAttribute(&#x27;d&#x27;,wv(1060,1290,290));&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Slik kommer vi oss dit</h2>
+<div style="height:400px"></div>
+<div style="display:flex; gap:32px">
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">🚢 Båt: Oslo–Kiel</h3>
+<p style="font-size:30px; line-height:1.4">Ettermiddag fra Oslo, framme neste morgen – barna sover seg til Tyskland. Så ca. 1 t bil.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Color+Line+Oslo+Kiel+ferge" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">🚗 Bil: Sverige og Danmark</h3>
+<p style="font-size:30px; line-height:1.4">Ca. 10–11 t med ferje Rødby–Puttgarden. Fehmarnbelt-tunnelen åpner tidligst i 2029.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=R%C3%B8dby+Puttgarden+ferge" target="_blank" rel="noopener">Se video</a></p>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="familien" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:48px">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Hva vil hver av oss ha?</h2>
+<div data-bi="rise" style="--d:0.25s; position:absolute; left:128px; top:255px; width:392px; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:28px; border-top:10px solid #1f9e9a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">🧸</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Toåringen</h3>
+<p style="font-size:30px; line-height:1.4">Sand, bølger, dyr å klappe – og en god lur i vogna.</p>
+</div>
+<div data-bi="rise" style="--d:0.53s; position:absolute; left:552px; top:255px; width:392px; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:28px; border-top:10px solid #ffc53d; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">🎠</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">10-åringen</h3>
+<p style="font-size:30px; line-height:1.4">Dyr, bading og rolige karuseller – moro uten stress.</p>
+</div>
+<div data-bi="rise" style="--d:0.81s; position:absolute; left:976px; top:255px; width:392px; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:28px; border-top:10px solid #e8553a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">🚂</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">12-åringen</h3>
+<p style="font-size:30px; line-height:1.4">Byliv, Miniatur Wunderland, bading – og litt egen frihet.</p>
+</div>
+<div data-bi="rise" style="--d:1.09s; position:absolute; left:1400px; top:255px; width:392px; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:28px; border-top:10px solid #12304a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">☕</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Mamma og pappa</h3>
+<p style="font-size:30px; line-height:1.4">Strandkurv, gamlebyer, god mat – og at alle har det fint.</p>
+</div>
+<p data-bi="fade" style="--d:1.37s; position:absolute; left:128px; top:716px; width:1664px; font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:500; line-height:1.3; color:#12304a">Oppskriften: <span style="color:#b8391f">stranden som base</span>, korte dager og én stor utflukt annenhver dag.</p>
+
+</section>
+
+<section class="slide" id="dypdykk" data-transition="push" style="background:#12304a; color:#fbf3e4; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; justify-content:center; gap:24px">
+<svg aria-label="Dekorativ sol over bølger" width="440" height="440" viewBox="0 0 440 440" style="position:absolute; left:1352px; top:150px; width:440px; height:440px"><circle cx="220" cy="220" r="210" fill="none" stroke="#1e4566" stroke-width="4"/><circle cx="220" cy="220" r="160" fill="none" stroke="#24507a" stroke-width="4"/><circle cx="220" cy="220" r="104" fill="#ffc53d"/><path d="M60 300q20-14 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0" fill="none" stroke="#7fd6d3" stroke-width="8" stroke-linecap="round"/><path d="M90 340q20-14 40 0t40 0t40 0t40 0t40 0t40 0t40 0" fill="none" stroke="#2a9491" stroke-width="8" stroke-linecap="round"/></svg>
+<p style="font-size:24px; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:#7fd6d3">Del 2</p>
+<h1 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:120px; font-weight:600; line-height:1.05; color:#fbf3e4; width:1150px">Dypdykk: dette kan vi finne på</h1>
+<p style="font-size:30px; line-height:1.4; color:#cfe3e1; width:1150px">Fra stranden utenfor døra til dagsturer i alle retninger.</p>
+<div data-bi="rise" style="--d:0.25s; position:absolute; left:128px; top:800px; width:1664px; display:flex; flex-wrap:wrap; gap:16px">
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🎢 Fornøyelsespark</p>
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🏖️ Strand</p>
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🌧️ Regnværsdager</p>
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🐐 Dyr</p>
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🏰 Byer</p>
+<p style="font-size:24px; font-weight:700; background:#1e4566; border:2px solid #2f5f86; color:#fbf3e4; padding:10px 22px; border-radius:999px">🚗 Dagsturer</p>
+</div>
+
+</section>
+
+<section class="slide" id="hansa" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:1152px; top:247px; width:640px; height:700px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%;font-family:ui-rounded,&#x27;SF Pro Rounded&#x27;,&#x27;Segoe UI&#x27;,system-ui,sans-serif}.cl{animation:cl linear infinite}@keyframes cl{from{transform:translateX(-160px)}to{transform:translateX(800px)}}.sun{transform-box:fill-box;transform-origin:center;animation:gl 4s ease-in-out infinite}@keyframes gl{50%{transform:scale(1.1)}}.fl{transform-box:fill-box;transform-origin:0 50%;animation:fl .7s ease-in-out infinite alternate}@keyframes fl{to{transform:scaleX(.7)}}.bob{animation:bob 1.8s ease-in-out infinite alternate}@keyframes bob{from{transform:translateY(-16px)}to{transform:translateY(16px)}}.bl{animation:bl 1s steps(2) infinite}@keyframes bl{50%{fill:#ffc53d}}.tr{animation:tr 16s linear infinite}@keyframes tr{from{transform:translateX(-320px)}to{transform:translateX(700px)}}.bt{animation:bt 9s ease-in-out infinite alternate}@keyframes bt{from{transform:translateX(0)}to{transform:translateX(150px)}}.bt2{animation-duration:11s;animation-direction:alternate-reverse}.rk{animation:rk 1.6s ease-in-out infinite alternate}@keyframes rk{from{transform:translateY(-3px)}to{transform:translateY(3px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 640 700&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;clipPath id=&quot;c&quot;&gt;&lt;rect width=&quot;640&quot; height=&quot;700&quot; rx=&quot;32&quot;/&gt;&lt;/clipPath&gt;&lt;linearGradient id=&quot;sk&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop offset=&quot;0&quot; stop-color=&quot;#bfe6e5&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#fdf0da&quot;/&gt;&lt;/linearGradient&gt;&lt;g id=&quot;cd&quot; fill=&quot;#fffaf2&quot;&gt;&lt;ellipse rx=&quot;54&quot; ry=&quot;20&quot;/&gt;&lt;ellipse cx=&quot;26&quot; cy=&quot;-14&quot; rx=&quot;32&quot; ry=&quot;20&quot;/&gt;&lt;ellipse cx=&quot;-22&quot; cy=&quot;-8&quot; rx=&quot;24&quot; ry=&quot;16&quot;/&gt;&lt;/g&gt;
+&lt;g id=&quot;h&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M-24 4C-24-10 16-12 20-2L30-18C36-24 44-20 42-12L34 4C30 14 18 16 10 14L-14 14C-22 14-24 10-24 4Z&quot;/&gt;&lt;path d=&quot;M-14 14L-18 30M8 14L12 30M-24 2C-32 0-34 10-38 14&quot; fill=&quot;none&quot;/&gt;&lt;circle cx=&quot;36&quot; cy=&quot;-14&quot; r=&quot;2&quot; fill=&quot;#12304a&quot; stroke=&quot;none&quot;/&gt;&lt;/g&gt;
+&lt;g id=&quot;bo&quot;&gt;&lt;path d=&quot;M-40 0H40C36 16 24 20 0 20S-36 16-40 0Z&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M-24 0V-26M24 0V-26&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M-32-26H32L24-38H-24Z&quot; fill=&quot;#fffaf2&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;&lt;/defs&gt;
+&lt;g clip-path=&quot;url(#c)&quot;&gt;
+&lt;rect width=&quot;640&quot; height=&quot;700&quot; fill=&quot;url(#sk)&quot;/&gt;
+&lt;circle class=&quot;sun&quot; cx=&quot;540&quot; cy=&quot;110&quot; r=&quot;44&quot; fill=&quot;#ffc53d&quot;/&gt;
+&lt;g transform=&quot;translate(0 90)&quot;&gt;&lt;g class=&quot;cl&quot; style=&quot;animation-duration:38s;animation-delay:-10s&quot;&gt;&lt;use href=&quot;#cd&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(0 170) scale(.7)&quot;&gt;&lt;g class=&quot;cl&quot; style=&quot;animation-duration:52s;animation-delay:-30s&quot;&gt;&lt;use href=&quot;#cd&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;rect y=&quot;430&quot; width=&quot;640&quot; height=&quot;270&quot; fill=&quot;#bfe3c6&quot;/&gt;
+&lt;line x1=&quot;320&quot; y1=&quot;104&quot; x2=&quot;320&quot; y2=&quot;150&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;4&quot;/&gt;&lt;path class=&quot;fl&quot; d=&quot;M322 106L352 115L322 124Z&quot; fill=&quot;#e8553a&quot;/&gt;
+&lt;polygon points=&quot;320,150 170,240 470,240&quot; fill=&quot;#e8553a&quot;/&gt;&lt;polygon points=&quot;320,150 200,240 245,240&quot; fill=&quot;#fbf3e4&quot;/&gt;&lt;polygon points=&quot;320,150 292,240 348,240&quot; fill=&quot;#fbf3e4&quot;/&gt;&lt;polygon points=&quot;320,150 395,240 440,240&quot; fill=&quot;#fbf3e4&quot;/&gt;
+&lt;circle cx=&quot;185&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;215&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;245&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;275&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;305&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;335&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;365&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;395&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;425&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;455&quot; cy=&quot;240&quot; r=&quot;15&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;rect x=&quot;180&quot; y=&quot;240&quot; width=&quot;280&quot; height=&quot;22&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:0.0s&quot; cx=&quot;195&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:-0.5s&quot; cx=&quot;223&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:0.0s&quot; cx=&quot;251&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:-0.5s&quot; cx=&quot;279&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:0.0s&quot; cx=&quot;307&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:-0.5s&quot; cx=&quot;335&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:0.0s&quot; cx=&quot;363&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:-0.5s&quot; cx=&quot;391&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:0.0s&quot; cx=&quot;419&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;&lt;circle class=&quot;bl&quot; style=&quot;animation-delay:-0.5s&quot; cx=&quot;447&quot; cy=&quot;251&quot; r=&quot;5&quot; fill=&quot;#fff6d8&quot;/&gt;
+&lt;line x1=&quot;215&quot; y1=&quot;262&quot; x2=&quot;215&quot; y2=&quot;420&quot; stroke=&quot;#ffc53d&quot; stroke-width=&quot;5&quot;/&gt;&lt;g transform=&quot;translate(215 340)&quot;&gt;&lt;g class=&quot;bob&quot; style=&quot;animation-delay:0.00s&quot;&gt;&lt;use href=&quot;#h&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;line x1=&quot;268&quot; y1=&quot;262&quot; x2=&quot;268&quot; y2=&quot;420&quot; stroke=&quot;#ffc53d&quot; stroke-width=&quot;5&quot;/&gt;&lt;g transform=&quot;translate(268 340)&quot;&gt;&lt;g class=&quot;bob&quot; style=&quot;animation-delay:-0.45s&quot;&gt;&lt;use href=&quot;#h&quot; fill=&quot;#ffe8a8&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;line x1=&quot;320&quot; y1=&quot;262&quot; x2=&quot;320&quot; y2=&quot;420&quot; stroke=&quot;#ffc53d&quot; stroke-width=&quot;5&quot;/&gt;&lt;g transform=&quot;translate(320 340)&quot;&gt;&lt;g class=&quot;bob&quot; style=&quot;animation-delay:-0.90s&quot;&gt;&lt;use href=&quot;#h&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;line x1=&quot;372&quot; y1=&quot;262&quot; x2=&quot;372&quot; y2=&quot;420&quot; stroke=&quot;#ffc53d&quot; stroke-width=&quot;5&quot;/&gt;&lt;g transform=&quot;translate(372 340)&quot;&gt;&lt;g class=&quot;bob&quot; style=&quot;animation-delay:-1.35s&quot;&gt;&lt;use href=&quot;#h&quot; fill=&quot;#cdeeed&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;line x1=&quot;425&quot; y1=&quot;262&quot; x2=&quot;425&quot; y2=&quot;420&quot; stroke=&quot;#ffc53d&quot; stroke-width=&quot;5&quot;/&gt;&lt;g transform=&quot;translate(425 340)&quot;&gt;&lt;g class=&quot;bob&quot; style=&quot;animation-delay:-1.80s&quot;&gt;&lt;use href=&quot;#h&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;ellipse cx=&quot;320&quot; cy=&quot;426&quot; rx=&quot;165&quot; ry=&quot;22&quot; fill=&quot;#12304a&quot;/&gt;&lt;ellipse cx=&quot;320&quot; cy=&quot;418&quot; rx=&quot;160&quot; ry=&quot;16&quot; fill=&quot;#1f9e9a&quot;/&gt;
+&lt;line x1=&quot;0&quot; y1=&quot;522&quot; x2=&quot;640&quot; y2=&quot;522&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;4&quot;/&gt;
+&lt;g transform=&quot;translate(0 474)&quot;&gt;&lt;g class=&quot;tr&quot;&gt;&lt;g class=&quot;rk&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;4&quot; width=&quot;70&quot; height=&quot;34&quot; rx=&quot;8&quot; fill=&quot;#1f9e9a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;rect x=&quot;80&quot; y=&quot;4&quot; width=&quot;70&quot; height=&quot;34&quot; rx=&quot;8&quot; fill=&quot;#ffc53d&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M160 38V10H196V-8H222V38Z&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;rect x=&quot;202&quot; y=&quot;-2&quot; width=&quot;14&quot; height=&quot;14&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;rect x=&quot;168&quot; y=&quot;-12&quot; width=&quot;12&quot; height=&quot;22&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;g fill=&quot;#12304a&quot;&gt;&lt;circle cx=&quot;18&quot; cy=&quot;42&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;52&quot; cy=&quot;42&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;98&quot; cy=&quot;42&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;132&quot; cy=&quot;42&quot; r=&quot;7&quot;/&gt;&lt;circle cx=&quot;178&quot; cy=&quot;42&quot; r=&quot;8&quot;/&gt;&lt;circle cx=&quot;208&quot; cy=&quot;42&quot; r=&quot;8&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;path d=&quot;M0 604C80 590 180 600 300 596C420 592 540 604 640 598V700H0Z&quot; fill=&quot;#6fd0d6&quot;/&gt;
+&lt;path d=&quot;M40 640q20-8 40 0M300 660q20-8 40 0M480 630q20-8 40 0&quot; stroke=&quot;#fffaf2&quot; stroke-width=&quot;3&quot; fill=&quot;none&quot; opacity=&quot;.7&quot;/&gt;
+&lt;circle cx=&quot;20&quot; cy=&quot;596&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;20&quot; cy=&quot;596&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;64&quot; cy=&quot;602&quot; r=&quot;9&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;64&quot; cy=&quot;602&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;108&quot; cy=&quot;608&quot; r=&quot;9&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;circle cx=&quot;108&quot; cy=&quot;608&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;152&quot; cy=&quot;596&quot; r=&quot;9&quot; fill=&quot;#b8391f&quot;/&gt;&lt;circle cx=&quot;152&quot; cy=&quot;596&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;196&quot; cy=&quot;602&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;196&quot; cy=&quot;602&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;240&quot; cy=&quot;608&quot; r=&quot;9&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;240&quot; cy=&quot;608&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;284&quot; cy=&quot;596&quot; r=&quot;9&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;circle cx=&quot;284&quot; cy=&quot;596&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;328&quot; cy=&quot;602&quot; r=&quot;9&quot; fill=&quot;#b8391f&quot;/&gt;&lt;circle cx=&quot;328&quot; cy=&quot;602&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;372&quot; cy=&quot;608&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;372&quot; cy=&quot;608&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;416&quot; cy=&quot;596&quot; r=&quot;9&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;416&quot; cy=&quot;596&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;460&quot; cy=&quot;602&quot; r=&quot;9&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;circle cx=&quot;460&quot; cy=&quot;602&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;504&quot; cy=&quot;608&quot; r=&quot;9&quot; fill=&quot;#b8391f&quot;/&gt;&lt;circle cx=&quot;504&quot; cy=&quot;608&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;548&quot; cy=&quot;596&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;548&quot; cy=&quot;596&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;592&quot; cy=&quot;602&quot; r=&quot;9&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle cx=&quot;592&quot; cy=&quot;602&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;636&quot; cy=&quot;608&quot; r=&quot;9&quot; fill=&quot;#fffaf2&quot;/&gt;&lt;circle cx=&quot;636&quot; cy=&quot;608&quot; r=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;
+&lt;g transform=&quot;translate(110 650)&quot;&gt;&lt;g class=&quot;bt&quot;&gt;&lt;g class=&quot;rk&quot;&gt;&lt;use href=&quot;#bo&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(380 672)&quot;&gt;&lt;g class=&quot;bt bt2&quot;&gt;&lt;g class=&quot;rk&quot; style=&quot;animation-delay:-.8s&quot;&gt;&lt;use href=&quot;#bo&quot; transform=&quot;scale(.85)&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;text x=&quot;24&quot; y=&quot;60&quot; font-size=&quot;28&quot; font-weight=&quot;800&quot; fill=&quot;#12304a&quot;&gt;Karuseller, båter og tog&lt;/text&gt;
+&lt;/g&gt;&lt;/svg&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Hansa-Park – rett ved stranden</h2>
+<div style="width:960px; display:flex; flex-direction:column; gap:28px">
+<p style="font-size:30px; line-height:1.4">Tysklands eneste fornøyelsespark ved sjøen, med over 125 attraksjoner i 11 temaverdener – fra helt rolig til ville berg-og-dalbaner. Vi velger det rolige.</p>
+<div style="display:flex; flex-direction:column; gap:20px">
+<div style="display:flex; gap:20px; align-items:start">
+<p style="width:150px; font-size:24px; font-weight:800; text-align:center; background:#ffe8a8; border-radius:999px; padding:6px 0px">10 og 12</p>
+<p style="width:790px; font-size:30px; line-height:1.4">Rolige turer: båtturen «Blumenmeer», parktoget HANSA-PARK Express og klassiske karuseller.</p>
+</div>
+<div style="display:flex; gap:20px; align-items:start">
+<p style="width:150px; font-size:24px; font-weight:800; text-align:center; background:#ffd2c6; border-radius:999px; padding:6px 0px">Alle</p>
+<p style="width:790px; font-size:30px; line-height:1.4">Show og 4D-kino – fint å sitte i skyggen med en is.</p>
+</div>
+<div style="display:flex; gap:20px; align-items:start">
+<p style="width:150px; font-size:24px; font-weight:800; text-align:center; background:#cdeeed; border-radius:999px; padding:6px 0px">2 år</p>
+<p style="width:790px; font-size:30px; line-height:1.4">Innendørs lekeland Piraten Camp og småbarnskaruseller.</p>
+</div>
+</div>
+<div style="background:#12304a; padding:28px 32px; border-radius:24px">
+<p style="font-size:30px; line-height:1.4; color:#fbf3e4"><b>2026-priser:</b> voksne 53 €, barn 4–11 år 43 €, under 4 år gratis. For oss fem ca. 200 € – 12-åringen betaler voksenpris.</p>
+</div>
+<div style="display:flex; gap:16px"><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Hansa-Park+Sierksdorf+Rundgang" target="_blank" rel="noopener">Se parken</a></p><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Hansa-Park+Blumenmeerbootsfahrt" target="_blank" rel="noopener">Se båtturen</a></p></div>
+</div>
+
+</section>
+
+<section class="slide" id="strand" data-transition="fade" style="background:#e3f1f0; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; align-items:start; gap:40px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:0px; top:700px; width:1920px; height:380px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%}.w{animation:d linear infinite}.a{animation-duration:30s}.b{animation-duration:20s}.c{animation-duration:13s}@keyframes d{to{transform:translateX(-960px)}}.ball{animation:bn .9s cubic-bezier(.3,0,.7,1) infinite alternate}@keyframes bn{from{transform:translateY(0)}to{transform:translateY(-60px)}}.crab{animation:cr 10s ease-in-out infinite alternate}@keyframes cr{from{transform:translateX(1050px)}to{transform:translateX(1650px)}}.leg{animation:lg .25s linear infinite alternate}@keyframes lg{to{transform:translateY(-3px)}}.fl{transform-box:fill-box;transform-origin:0 50%;animation:fl .8s ease-in-out infinite alternate}@keyframes fl{to{transform:scaleX(.7)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1920 380&quot; preserveAspectRatio=&quot;xMidYMax slice&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;g id=&quot;k&quot;&gt;&lt;path d=&quot;M0 70V20Q40-12 80 20V70Z&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M6 32H74M6 46H74M6 60H74&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;6&quot;/&gt;&lt;rect x=&quot;-6&quot; y=&quot;66&quot; width=&quot;92&quot; height=&quot;10&quot; rx=&quot;3&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;/defs&gt;
+&lt;rect y=&quot;40&quot; width=&quot;1920&quot; height=&quot;260&quot; fill=&quot;#a9dcdb&quot;/&gt;
+&lt;g id=&quot;s1&quot;&gt;&lt;/g&gt;
+&lt;path d=&quot;M0 380V262C320 244 640 256 960 264C1280 272 1600 250 1920 258V380Z&quot; fill=&quot;#f1dcb2&quot;/&gt;
+&lt;use href=&quot;#k&quot; x=&quot;240&quot; y=&quot;228&quot;/&gt;&lt;use href=&quot;#k&quot; x=&quot;1420&quot; y=&quot;232&quot;/&gt;&lt;use href=&quot;#k&quot; x=&quot;1540&quot; y=&quot;236&quot;/&gt;
+&lt;g transform=&quot;translate(820 300)&quot;&gt;&lt;path d=&quot;M0 0V-56H12V-68H24V-56H42V-68H54V-56H66V0Z&quot; fill=&quot;#e8c98d&quot; stroke=&quot;#b8935a&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;path d=&quot;M20-56V-100H28V-110H38V-100H46V-56Z&quot; fill=&quot;#e8c98d&quot; stroke=&quot;#b8935a&quot; stroke-width=&quot;3&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;path d=&quot;M33-110V-146&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path class=&quot;fl&quot; d=&quot;M34-146L60-138L34-130Z&quot; fill=&quot;#e8553a&quot;/&gt;&lt;path d=&quot;M26 0V-22A7 7 0 0 1 40-22V0Z&quot; fill=&quot;#b8935a&quot;/&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(620 300)&quot;&gt;&lt;g class=&quot;ball&quot;&gt;&lt;circle r=&quot;22&quot; fill=&quot;#fbf3e4&quot;/&gt;&lt;path d=&quot;M-22 0A22 22 0 0 1 0-22V22A22 22 0 0 1-22 0Z&quot; fill=&quot;#e8553a&quot;/&gt;&lt;path d=&quot;M0-22A22 22 0 0 1 22 0H0Z&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;circle r=&quot;22&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(0 336)&quot;&gt;&lt;g class=&quot;crab&quot;&gt;&lt;g class=&quot;leg&quot; stroke=&quot;#b8391f&quot; stroke-width=&quot;4&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path d=&quot;M-18 6l-14 12M-8 10l-8 14M8 10l8 14M18 6l14 12&quot;/&gt;&lt;/g&gt;&lt;ellipse rx=&quot;28&quot; ry=&quot;16&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;-34&quot; cy=&quot;-14&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;circle cx=&quot;34&quot; cy=&quot;-14&quot; r=&quot;9&quot; fill=&quot;#e8553a&quot;/&gt;&lt;path d=&quot;M-8-14V-24M8-14V-24&quot; stroke=&quot;#b8391f&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;-8&quot; cy=&quot;-26&quot; r=&quot;4&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;8&quot; cy=&quot;-26&quot; r=&quot;4&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;/svg&gt;
+&lt;script&gt;function wv(g,y,a,p,c,k){var d=&#x27;M0 &#x27;+y;for(var x=0;x&lt;3840;x+=p)d+=&#x27; Q&#x27;+(x+p/4)+&#x27; &#x27;+(y-a)+&#x27; &#x27;+(x+p/2)+&#x27; &#x27;+y+&#x27; T&#x27;+(x+p)+&#x27; &#x27;+y;d+=&#x27; V380 H0Z&#x27;;var e=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);e.setAttribute(&#x27;d&#x27;,d);e.setAttribute(&#x27;fill&#x27;,c);e.setAttribute(&#x27;class&#x27;,&#x27;w &#x27;+k);document.getElementById(g).appendChild(e)}wv(&#x27;s1&#x27;,80,8,480,&#x27;#86cccb&#x27;,&#x27;a&#x27;);wv(&#x27;s1&#x27;,150,12,320,&#x27;#4fb3b2&#x27;,&#x27;b&#x27;);wv(&#x27;s1&#x27;,215,14,480,&#x27;#2a9491&#x27;,&#x27;c&#x27;);&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Stranden rett utenfor døra</h2>
+<div style="width:1664px; display:flex; gap:32px">
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Sierksdorf og Haffkrug</h3>
+<p style="font-size:30px; line-height:1.4">Rolige sandstrender i gangavstand – sandslott og plasking.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Sierksdorf+Strand+Ostsee" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Scharbeutz</h3>
+<p style="font-size:30px; line-height:1.4">Livlig promenade og ny sjøbro fra 2025 – is, lek og folkeliv.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Scharbeutz+Seebr%C3%BCcke+Strand" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Timmendorfer Strand</h3>
+<p style="font-size:30px; line-height:1.4">Lang promenade, ny sjøbro fra 2024 og Sea Life-akvariet.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Timmendorfer+Strand+Seebr%C3%BCcke" target="_blank" rel="noopener">Se video</a></p>
+</div>
+</div>
+<p style="font-size:30px; line-height:1.4; background:#12304a; color:#fbf3e4; padding:18px 32px; border-radius:999px"><b>Strandkorb</b> = Østersjøens egen hytte: lei en strandkurv for dagen eller hele uka.</p>
+
+</section>
+
+<section class="slide" id="regnvaer" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:1172px; top:247px; width:620px; height:700px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%}.R{animation:r linear infinite}@keyframes r{from{transform:translateX(-140px)}to{transform:translateX(760px)}}.L{animation:l linear infinite}@keyframes l{from{transform:translateX(760px)}to{transform:translateX(-140px)}}.b{animation:b linear infinite}@keyframes b{from{transform:translateY(0);opacity:.9}to{transform:translateY(-700px);opacity:0}}.sw{transform-box:fill-box;transform-origin:50% 100%;animation:sw 4s ease-in-out infinite alternate}@keyframes sw{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}.ray{animation:ry 6s ease-in-out infinite alternate}@keyframes ry{to{opacity:.02}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 620 700&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;linearGradient id=&quot;w&quot; x1=&quot;0&quot; y1=&quot;0&quot; x2=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop offset=&quot;0&quot; stop-color=&quot;#6fd0d6&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#12304a&quot;/&gt;&lt;/linearGradient&gt;&lt;clipPath id=&quot;c&quot;&gt;&lt;rect width=&quot;620&quot; height=&quot;700&quot; rx=&quot;36&quot;/&gt;&lt;/clipPath&gt;
+&lt;g id=&quot;f&quot;&gt;&lt;path d=&quot;M30 0c18-20 54-20 72 0c-18 20-54 20-72 0z&quot;/&gt;&lt;path d=&quot;M34 0L8-16V16Z&quot;/&gt;&lt;circle cx=&quot;88&quot; cy=&quot;-4&quot; r=&quot;4&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;/defs&gt;
+&lt;g clip-path=&quot;url(#c)&quot;&gt;
+&lt;rect width=&quot;620&quot; height=&quot;700&quot; fill=&quot;url(#w)&quot;/&gt;
+&lt;g class=&quot;ray&quot; fill=&quot;#ffffff&quot; opacity=&quot;.12&quot;&gt;&lt;polygon points=&quot;80,0 140,0 60,700 0,700&quot;/&gt;&lt;polygon points=&quot;260,0 300,0 330,700 250,700&quot;/&gt;&lt;polygon points=&quot;460,0 520,0 600,700 500,700&quot;/&gt;&lt;/g&gt;
+&lt;g id=&quot;fs&quot;&gt;&lt;/g&gt;
+&lt;g fill=&quot;#2a9491&quot;&gt;&lt;path class=&quot;sw&quot; d=&quot;M80 700C60 640 100 600 80 540C60 500 90 470 84 440C104 480 90 520 104 560C120 610 96 650 104 700Z&quot;/&gt;&lt;path class=&quot;sw&quot; style=&quot;animation-delay:-2s&quot; d=&quot;M130 700C116 660 146 630 132 590C122 560 140 540 136 520C152 550 142 580 150 610C160 650 144 680 150 700Z&quot;/&gt;&lt;path class=&quot;sw&quot; style=&quot;animation-delay:-1s&quot; d=&quot;M520 700C500 630 540 590 516 520C500 480 530 450 522 410C546 460 530 500 544 540C562 600 536 650 546 700Z&quot;/&gt;&lt;/g&gt;
+&lt;path d=&quot;M0 700V660C120 640 240 652 360 662C480 670 560 650 620 656V700Z&quot; fill=&quot;#f1dcb2&quot;/&gt;
+&lt;path transform=&quot;translate(400 672) scale(.9)&quot; d=&quot;M0 -26L6.5 -8.9L24.7 -8L10.5 3.4L15.3 21L0 11L-15.3 21L-10.5 3.4L-24.7 -8L-6.5 -8.9Z&quot; fill=&quot;#e8553a&quot;/&gt;
+&lt;g id=&quot;bs&quot;&gt;&lt;/g&gt;
+&lt;/g&gt;&lt;/svg&gt;
+&lt;script&gt;var N=&#x27;http://www.w3.org/2000/svg&#x27;,F=document.getElementById(&#x27;fs&#x27;),B=document.getElementById(&#x27;bs&#x27;);[[110,&#x27;#ffc53d&#x27;,13,0,1,0],[210,&#x27;#e8553a&#x27;,18,-7,1.3,1],[300,&#x27;#fbf3e4&#x27;,15,-4,.8,0],[400,&#x27;#ffc53d&#x27;,21,-12,1.1,1],[500,&#x27;#9fe0de&#x27;,12,-9,.9,0],[580,&#x27;#e8553a&#x27;,24,-3,.7,1]].forEach(function(q){var o=document.createElementNS(N,&#x27;g&#x27;);o.setAttribute(&#x27;transform&#x27;,&#x27;translate(0 &#x27;+q[0]+&#x27;)&#x27;);var m=document.createElementNS(N,&#x27;g&#x27;);m.setAttribute(&#x27;class&#x27;,q[5]?&#x27;L&#x27;:&#x27;R&#x27;);m.style.animationDuration=q[2]+&#x27;s&#x27;;m.style.animationDelay=q[3]+&#x27;s&#x27;;var u=document.createElementNS(N,&#x27;use&#x27;);u.setAttribute(&#x27;href&#x27;,&#x27;#f&#x27;);u.setAttribute(&#x27;fill&#x27;,q[1]);u.setAttribute(&#x27;transform&#x27;,&#x27;scale(&#x27;+(q[5]?-q[4]:q[4])+&#x27; &#x27;+q[4]+&#x27;)&#x27;);m.appendChild(u);o.appendChild(m);F.appendChild(o)});for(var i=0;i&lt;16;i++){var c=document.createElementNS(N,&#x27;circle&#x27;);c.setAttribute(&#x27;cx&#x27;,30+Math.random()*560);c.setAttribute(&#x27;cy&#x27;,700);c.setAttribute(&#x27;r&#x27;,3+Math.random()*7);c.setAttribute(&#x27;fill&#x27;,&#x27;none&#x27;);c.setAttribute(&#x27;stroke&#x27;,&#x27;#e3f1f0&#x27;);c.setAttribute(&#x27;stroke-width&#x27;,&#x27;2&#x27;);c.setAttribute(&#x27;class&#x27;,&#x27;b&#x27;);c.style.animationDuration=(5+Math.random()*6)+&#x27;s&#x27;;c.style.animationDelay=(-Math.random()*10)+&#x27;s&#x27;;B.appendChild(c)}&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Når det regner – eller er for varmt</h2>
+<div style="width:980px; display:flex; flex-direction:column; gap:24px">
+<div style="display:flex; gap:24px; align-items:start; background:#fffaf2; padding:28px 32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<p style="width:90px; font-size:72px; line-height:1">💦</p>
+<div style="flex:1; display:flex; flex-direction:column; gap:8px">
+<div style="display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center"><h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Ostsee-Therme, Scharbeutz</h3><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Ostsee-Therme+Scharbeutz+Rutschen" target="_blank" rel="noopener">Se video</a></p></div>
+<p style="font-size:30px; line-height:1.4"><b>10 min.</b> 145 m sklie, strømkanal og babybasseng på 34 °C – rett ved stranden.</p>
+</div>
+</div>
+<div style="display:flex; gap:24px; align-items:start; background:#fffaf2; padding:28px 32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<p style="width:90px; font-size:72px; line-height:1">🐠</p>
+<div style="flex:1; display:flex; flex-direction:column; gap:8px">
+<div style="display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center"><h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Sea Life, Timmendorfer Strand</h3><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Sea+Life+Timmendorfer+Strand" target="_blank" rel="noopener">Se video</a></p></div>
+<p style="font-size:30px; line-height:1.4"><b>15 min.</b> Akvarier med fisk og sjøstjerner – overkommelig også for små bein.</p>
+</div>
+</div>
+<div style="display:flex; gap:24px; align-items:start; background:#fffaf2; padding:28px 32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<p style="width:90px; font-size:72px; line-height:1">🌴</p>
+<div style="flex:1; display:flex; flex-direction:column; gap:8px">
+<div style="display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center"><h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Weissenhäuser Strand</h3><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Weissenh%C3%A4user+Strand+Subtropisches+Badeparadies" target="_blank" rel="noopener">Se video</a></p></div>
+<p style="font-size:30px; line-height:1.4"><b>35 min.</b> Subtropisk badeland med sklier – og stranden rett utenfor.</p>
+</div>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="dyr" data-transition="fade" style="background:#e3f1f0; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Dyr å se, mate og klappe</h2>
+<div style="display:flex; gap:32px; align-items:start">
+<div style="width:600px; display:flex; flex-direction:column; gap:14px; background:#12304a; padding:40px; border-radius:28px">
+<p style="font-size:72px; line-height:1.1">🍓</p>
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#12304a; background:#ffc53d; padding:6px 18px; border-radius:999px">Toåringens favoritt?</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2; color:#fbf3e4">Karls Erlebnis-Dorf, Warnsdorf</h3>
+<p style="font-size:30px; line-height:1.4; color:#fbf3e4"><b>Ca. 20 min.</b> Jordbærgård med gratis inngang: lekeplasser, dyr, gårdsbutikk og masse småmoro. Man betaler bare for aktivitetene.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Karls+Erlebnis-Dorf+Warnsdorf" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="width:1032px; display:grid; grid-template-columns:1fr 1fr; gap:32px">
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Vogelpark Niendorf</h3>
+<p style="font-size:30px; line-height:1.4"><b>10 min.</b> Fuglepark ved Timmendorfer Strand – fin rolig formiddag.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Vogelpark+Niendorf" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Wildpark Eekholt</h3>
+<p style="font-size:30px; line-height:1.4"><b>Ca. 50 min.</b> Ulv, hjort og villsvin i skogen – og flyshow med rovfugler.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Wildpark+Eekholt" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Arche Warder</h3>
+<p style="font-size:30px; line-height:1.4"><b>Ca. 1 t.</b> Stort senter for gamle og sjeldne husdyrraser.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Arche+Warder+Tierpark" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Tierpark Hagenbeck</h3>
+<p style="font-size:30px; line-height:1.4"><b>Ca. 1 t 15.</b> Klassisk dyrehage i Hamburg – kan kombineres med byen.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Tierpark+Hagenbeck" target="_blank" rel="noopener">Se video</a></p>
+</div>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="utflukter" data-transition="push" style="background:#12304a; color:#fbf3e4; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:128px; top:247px; width:787px; height:700px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%;font-family:ui-rounded,&#x27;SF Pro Rounded&#x27;,&#x27;Segoe UI&#x27;,system-ui,sans-serif;font-size:30px}.t{font-weight:800;fill:#12304a;paint-order:stroke;stroke:#fbf3e4;stroke-width:7px;stroke-linejoin:round}.s{font-style:italic;font-weight:700;fill:#13706d}.pin{transform-box:fill-box;transform-origin:center;animation:pop .6s cubic-bezier(.3,1.7,.5,1) both}@keyframes pop{from{transform:scale(0)}}.pu{transform-box:fill-box;transform-origin:center;animation:pu 4s ease-out infinite}@keyframes pu{from{transform:scale(.03);opacity:.9}to{transform:scale(1);opacity:0}}.wl{animation:wl 5s ease-in-out infinite alternate}@keyframes wl{to{transform:translateX(26px)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1000 889&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;clipPath id=&quot;c&quot;&gt;&lt;rect width=&quot;1000&quot; height=&quot;889&quot; rx=&quot;36&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;
+&lt;g clip-path=&quot;url(#c)&quot;&gt;
+&lt;rect width=&quot;1000&quot; height=&quot;889&quot; fill=&quot;#f3e3c3&quot;/&gt;
+&lt;polygon points=&quot;0,0 0,77 114,108 191,155 195,209 218,186 236,139 318,155 409,209 509,232 591,178 627,178 636,232 632,294 614,325 573,356 523,387 495,402 486,417 477,448 491,472 527,495 568,495 636,472 705,456 764,495 795,541 818,479 841,425 886,371 955,348 1000,340 1000,0&quot; fill=&quot;#bfe3e2&quot;/&gt;
+&lt;polygon points=&quot;582,139 614,101 645,62 705,70 727,116 691,147 636,155&quot; fill=&quot;#f3e3c3&quot;/&gt;
+&lt;ellipse cx=&quot;327&quot; cy=&quot;340&quot; rx=&quot;34&quot; ry=&quot;20&quot; fill=&quot;#bfe3e2&quot;/&gt;&lt;ellipse cx=&quot;800&quot; cy=&quot;690&quot; rx=&quot;14&quot; ry=&quot;52&quot; fill=&quot;#bfe3e2&quot;/&gt;
+&lt;path d=&quot;M0 700C60 760 100 800 132 812C180 830 240 860 300 889&quot; fill=&quot;none&quot; stroke=&quot;#bfe3e2&quot; stroke-width=&quot;12&quot;/&gt;
+&lt;path d=&quot;M132 812L300 680L450 564L470 480L486 410L560 320L620 240L627 180M450 564L620 560L795 541M132 812L180 560L195 216&quot; fill=&quot;none&quot; stroke=&quot;#d6bf90&quot; stroke-width=&quot;5&quot; stroke-dasharray=&quot;1 11&quot; stroke-linecap=&quot;round&quot;/&gt;
+&lt;path d=&quot;M620 180V152&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;g fill=&quot;none&quot; stroke=&quot;#8fcac9&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;&gt;&lt;path class=&quot;wl&quot; d=&quot;M330 60q10-8 20 0t20 0t20 0&quot;/&gt;&lt;path class=&quot;wl&quot; style=&quot;animation-delay:-2s&quot; d=&quot;M430 110q10-8 20 0t20 0t20 0&quot;/&gt;&lt;path class=&quot;wl&quot; style=&quot;animation-delay:-3s&quot; d=&quot;M880 250q10-8 20 0t20 0t20 0&quot;/&gt;&lt;/g&gt;
+&lt;text class=&quot;s&quot; x=&quot;760&quot; y=&quot;330&quot; font-size=&quot;36&quot;&gt;Østersjøen&lt;/text&gt;
+&lt;circle cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;208&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-opacity=&quot;.4&quot; stroke-width=&quot;3&quot; stroke-dasharray=&quot;10 10&quot;/&gt;
+&lt;circle cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;486&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-opacity=&quot;.4&quot; stroke-width=&quot;3&quot; stroke-dasharray=&quot;10 10&quot;/&gt;
+&lt;circle class=&quot;pu&quot; cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;486&quot; fill=&quot;none&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;circle class=&quot;pu&quot; style=&quot;animation-delay:2s&quot; cx=&quot;486&quot; cy=&quot;410&quot; r=&quot;486&quot; fill=&quot;none&quot; stroke=&quot;#e8553a&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;text class=&quot;t&quot; x=&quot;702&quot; y=&quot;420&quot; font-size=&quot;26&quot;&gt;≈ 30 min&lt;/text&gt;
+&lt;text class=&quot;t&quot; x=&quot;880&quot; y=&quot;172&quot; font-size=&quot;26&quot;&gt;≈ 1 t&lt;/text&gt;
+&lt;path d=&quot;M477 448L400 448M491 472L418 500M500 518L500 555M532 495L565 530&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;
+&lt;g fill=&quot;#12304a&quot;&gt;&lt;circle cx=&quot;477&quot; cy=&quot;448&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;491&quot; cy=&quot;472&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;500&quot; cy=&quot;518&quot; r=&quot;5&quot;/&gt;&lt;circle cx=&quot;532&quot; cy=&quot;495&quot; r=&quot;5&quot;/&gt;&lt;/g&gt;
+&lt;path d=&quot;M48 862H72L60 882Z&quot; fill=&quot;#12304a&quot;/&gt;
+&lt;g id=&quot;p&quot;&gt;&lt;/g&gt;
+&lt;g class=&quot;pin&quot; style=&quot;animation-delay:.2s&quot;&gt;&lt;path transform=&quot;translate(486 410) scale(1.35)&quot; d=&quot;M0 -26L6.5 -8.9L24.7 -8L10.5 3.4L15.3 21L0 11L-15.3 21L-10.5 3.4L-24.7 -8L-6.5 -8.9Z&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;2.5&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;/g&gt;
+&lt;text class=&quot;t&quot; x=&quot;458&quot; y=&quot;396&quot; text-anchor=&quot;end&quot; font-size=&quot;34&quot;&gt;Sierksdorf&lt;/text&gt;
+&lt;text class=&quot;t&quot; x=&quot;975&quot; y=&quot;868&quot; text-anchor=&quot;end&quot;&gt;Kjøretider ca., uten kø&lt;/text&gt;
+&lt;/g&gt;&lt;/svg&gt;
+&lt;script&gt;var N=&#x27;http://www.w3.org/2000/svg&#x27;,G=document.getElementById(&#x27;p&#x27;);[[400,448],[418,500],[500,555],[565,530],[450,564],[509,232],[677,124],[109,502],[195,216],[82,301],[132,812],[777,750],[60,835]].forEach(function(q,i){var g=document.createElementNS(N,&#x27;g&#x27;);g.setAttribute(&#x27;class&#x27;,&#x27;pin&#x27;);g.style.animationDelay=(.6+i*.22)+&#x27;s&#x27;;g.innerHTML=&#x27;&lt;circle cx=&quot;&#x27;+q[0]+&#x27;&quot; cy=&quot;&#x27;+q[1]+&#x27;&quot; r=&quot;22&quot; fill=&quot;#ffc53d&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;text x=&quot;&#x27;+q[0]+&#x27;&quot; y=&quot;&#x27;+(q[1]+9)+&#x27;&quot; text-anchor=&quot;middle&quot; font-size=&quot;26&quot; font-weight=&quot;800&quot; fill=&quot;#12304a&quot;&gt;&#x27;+(i+1)+&#x27;&lt;/text&gt;&#x27;;G.appendChild(g)});&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#fbf3e4">Dagsturer med bil fra Sierksdorf</h2>
+<div style="position:absolute; left:963px; top:247px; width:829px; display:flex; flex-direction:column; gap:10px">
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">1</p><p style="flex:1; font-size:30px; line-height:1.4">Scharbeutz · Ostsee-Therme</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">10 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">2</p><p style="flex:1; font-size:30px; line-height:1.4">Timmendorfer Strand · Sea Life</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">15 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">3</p><p style="flex:1; font-size:30px; line-height:1.4">Karls Erlebnis-Dorf</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">20 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">4</p><p style="flex:1; font-size:30px; line-height:1.4">Travemünde</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">25 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">5</p><p style="flex:1; font-size:30px; line-height:1.4">Lübeck</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">30 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">6</p><p style="flex:1; font-size:30px; line-height:1.4">Weissenhäuser Strand</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">35 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">7</p><p style="flex:1; font-size:30px; line-height:1.4">Fehmarn</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">45 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">8</p><p style="flex:1; font-size:30px; line-height:1.4">Wildpark Eekholt</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">50 min</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">9</p><p style="flex:1; font-size:30px; line-height:1.4">Kiel og Laboe</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">1 t</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">10</p><p style="flex:1; font-size:30px; line-height:1.4">Arche Warder</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">1 t</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">11</p><p style="flex:1; font-size:30px; line-height:1.4">Hamburg</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">1 t 15</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">12</p><p style="flex:1; font-size:30px; line-height:1.4">Schwerin</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">1 t 15</p></div>
+<div style="display:flex; gap:16px; align-items:center"><p style="width:44px; font-size:24px; font-weight:800; line-height:1.8; text-align:center; background:#ffc53d; color:#12304a; border-radius:999px">13</p><p style="flex:1; font-size:30px; line-height:1.4">Serengeti-Park (sør for kartet)</p><p style="font-size:24px; font-weight:700; color:#9fe0de; white-space:nowrap">2 t 15</p></div>
+</div>
+
+</section>
+
+<section class="slide" id="luebeck" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<svg aria-label="Illustrasjon av Holstentor i Lübeck" width="600" height="560" viewBox="0 0 600 560" style="position:absolute; left:1192px; top:247px; width:600px; height:560px"><rect width="600" height="560" rx="32" fill="#e3f1f0"/><circle cx="505" cy="95" r="40" fill="#ffc53d"/><path d="M0 470H600V528A32 32 0 0 1 568 560H32A32 32 0 0 1 0 528Z" fill="#7fb59b"/><path d="M60 110q10-8 20 0q10-8 20 0M110 80q8-6 16 0q8-6 16 0" fill="none" stroke="#12304a" stroke-width="3" stroke-linecap="round"/><g transform="rotate(-2 300 480)"><rect x="70" y="210" width="150" height="270" fill="#b5533c"/><rect x="380" y="210" width="150" height="270" fill="#b5533c"/><rect x="200" y="170" width="200" height="310" fill="#c2603f"/><path d="M200 172L300 72L400 172Z" fill="#c2603f"/><path d="M60 214L145 42L230 214Z" fill="#2f5d57"/><path d="M370 214L455 42L540 214Z" fill="#2f5d57"/><path d="M294 74V30H306V74Z" fill="#2f5d57"/><path d="M70 262H220M70 342H220M70 422H220M380 262H530M380 342H530M380 422H530M200 230H400M200 310H400M200 390H400" stroke="#8e3b2a" stroke-width="10"/><g fill="#3b1f1a"><rect x="100" y="282" width="22" height="36" rx="11"/><rect x="168" y="282" width="22" height="36" rx="11"/><rect x="100" y="362" width="22" height="36" rx="11"/><rect x="168" y="362" width="22" height="36" rx="11"/><rect x="410" y="282" width="22" height="36" rx="11"/><rect x="478" y="282" width="22" height="36" rx="11"/><rect x="410" y="362" width="22" height="36" rx="11"/><rect x="478" y="362" width="22" height="36" rx="11"/><rect x="236" y="250" width="22" height="36" rx="11"/><rect x="289" y="250" width="22" height="36" rx="11"/><rect x="342" y="250" width="22" height="36" rx="11"/><rect x="236" y="330" width="22" height="36" rx="11"/><rect x="342" y="330" width="22" height="36" rx="11"/><path d="M258 480V414A42 42 0 0 1 342 414V480Z"/></g></g></svg>
+<p style="position:absolute; left:1192px; top:830px; width:600px; font-size:24px; line-height:1.4; color:#4a6072"><b>Fun fact:</b> Holstentor har sunket skjevt ned i den myke grunnen.</p>
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Lübeck og Travemünde</h2>
+<div style="width:1000px; display:flex; flex-direction:column; gap:24px">
+<div style="display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:32px 36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="display:flex; gap:20px; align-items:center"><h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Lübeck</h3><p style="font-size:24px; font-weight:800; background:#ffe8a8; padding:6px 16px; border-radius:999px; white-space:nowrap">ca. 30 min · UNESCO-gamleby</p><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=L%C3%BCbeck+Altstadt+Holstentor" target="_blank" rel="noopener">Se video</a></p></div>
+<ul style="font-size:30px; line-height:1.4; padding:0px 0px 0px 36px">
+<li>Holstentor – byporten fra 1400-tallet</li>
+<li>Niederegger: marsipan-café og marsipanmuseum</li>
+<li>Båttur rundt den gamle bykjernen</li>
+<li>Hansemuseum for 12-åringen (og oss)</li>
+</ul>
+</div>
+<div style="display:flex; flex-direction:column; gap:12px; background:#fffaf2; padding:32px 36px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="display:flex; gap:20px; align-items:center"><h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Travemünde</h3><p style="font-size:24px; font-weight:800; background:#cdeeed; padding:6px 16px; border-radius:999px; white-space:nowrap">ca. 25 min</p><p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Travem%C3%BCnde+Passat+Strand" target="_blank" rel="noopener">Se video</a></p></div>
+<ul style="font-size:30px; line-height:1.4; padding:0px 0px 0px 36px">
+<li>Firemastet seilskute «Passat» å gå om bord i</li>
+<li>Kjempeferjer som glir tett forbi promenaden</li>
+<li>Kort ferjetur over til Priwall-stranden</li>
+<li>Fiskebrød på kaia</li>
+</ul>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="hamburg" data-transition="fade" style="background:#e3f1f0; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:1192px; top:247px; width:600px; height:560px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%}.sm{animation:sm 2.4s ease-out infinite}@keyframes sm{from{transform:translateY(0) scale(.6);opacity:.9}to{transform:translateY(-40px) scale(1.4);opacity:0}}.sm{transform-box:fill-box;transform-origin:center}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 600 560&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;clipPath id=&quot;c&quot;&gt;&lt;rect width=&quot;600&quot; height=&quot;560&quot; rx=&quot;32&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;
+&lt;g clip-path=&quot;url(#c)&quot;&gt;
+&lt;rect width=&quot;600&quot; height=&quot;560&quot; fill=&quot;#d7efee&quot;/&gt;
+&lt;ellipse cx=&quot;300&quot; cy=&quot;290&quot; rx=&quot;260&quot; ry=&quot;210&quot; fill=&quot;#a8d5b0&quot;/&gt;
+&lt;ellipse cx=&quot;300&quot; cy=&quot;290&quot; rx=&quot;190&quot; ry=&quot;150&quot; fill=&quot;none&quot; stroke=&quot;#8a6a4a&quot; stroke-width=&quot;24&quot; stroke-dasharray=&quot;5 10&quot;/&gt;
+&lt;ellipse cx=&quot;300&quot; cy=&quot;290&quot; rx=&quot;181&quot; ry=&quot;141&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;
+&lt;ellipse cx=&quot;300&quot; cy=&quot;290&quot; rx=&quot;199&quot; ry=&quot;159&quot; fill=&quot;none&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;
+&lt;g transform=&quot;translate(236 262)&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;30&quot; width=&quot;110&quot; height=&quot;50&quot; fill=&quot;#b5533c&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M0 30V2Q14-14 28 0Q42-16 56 0Q70-16 84 0Q98-14 110 2V30Z&quot; fill=&quot;#cfe9f2&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(372 196)&quot;&gt;&lt;rect width=&quot;26&quot; height=&quot;54&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M-2 0L13-48L28 0Z&quot; fill=&quot;#2f5d57&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(190 346)&quot;&gt;&lt;rect width=&quot;42&quot; height=&quot;36&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M-4 0L21-22L46 0Z&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;
+&lt;g transform=&quot;translate(372 330)&quot;&gt;&lt;rect width=&quot;42&quot; height=&quot;36&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M-4 0L21-22L46 0Z&quot; fill=&quot;#1f9e9a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;/g&gt;
+&lt;circle cx=&quot;214&quot; cy=&quot;226&quot; r=&quot;16&quot; fill=&quot;#5f9d7a&quot;/&gt;&lt;circle cx=&quot;430&quot; cy=&quot;266&quot; r=&quot;14&quot; fill=&quot;#5f9d7a&quot;/&gt;&lt;circle cx=&quot;296&quot; cy=&quot;392&quot; r=&quot;15&quot; fill=&quot;#5f9d7a&quot;/&gt;
+&lt;path id=&quot;t&quot; d=&quot;M110 290a190 150 0 1 0 380 0a190 150 0 1 0-380 0&quot; fill=&quot;none&quot;/&gt;
+&lt;g&gt;&lt;rect x=&quot;-26&quot; y=&quot;-14&quot; width=&quot;52&quot; height=&quot;28&quot; rx=&quot;6&quot; fill=&quot;#e8553a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;rect x=&quot;-26&quot; y=&quot;-14&quot; width=&quot;18&quot; height=&quot;28&quot; rx=&quot;4&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle cx=&quot;14&quot; cy=&quot;0&quot; r=&quot;6&quot; fill=&quot;#12304a&quot;/&gt;&lt;circle class=&quot;sm&quot; cx=&quot;14&quot; cy=&quot;-18&quot; r=&quot;7&quot; fill=&quot;#ffffff&quot;/&gt;&lt;animateMotion dur=&quot;12s&quot; begin=&quot;-1.8s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#t&quot;/&gt;&lt;/animateMotion&gt;&lt;/g&gt;
+&lt;g&gt;&lt;rect x=&quot;-22&quot; y=&quot;-13&quot; width=&quot;44&quot; height=&quot;26&quot; rx=&quot;5&quot; fill=&quot;#ffc53d&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;animateMotion dur=&quot;12s&quot; begin=&quot;-1.2s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#t&quot;/&gt;&lt;/animateMotion&gt;&lt;/g&gt;
+&lt;g&gt;&lt;rect x=&quot;-22&quot; y=&quot;-13&quot; width=&quot;44&quot; height=&quot;26&quot; rx=&quot;5&quot; fill=&quot;#1f9e9a&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;animateMotion dur=&quot;12s&quot; begin=&quot;-0.6s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#t&quot;/&gt;&lt;/animateMotion&gt;&lt;/g&gt;
+&lt;g&gt;&lt;rect x=&quot;-22&quot; y=&quot;-13&quot; width=&quot;44&quot; height=&quot;26&quot; rx=&quot;5&quot; fill=&quot;#fbf3e4&quot; stroke=&quot;#12304a&quot; stroke-width=&quot;3&quot;/&gt;&lt;animateMotion dur=&quot;12s&quot; begin=&quot;0s&quot; repeatCount=&quot;indefinite&quot; rotate=&quot;auto&quot;&gt;&lt;mpath href=&quot;#t&quot;/&gt;&lt;/animateMotion&gt;&lt;/g&gt;
+&lt;/g&gt;&lt;/svg&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<div style="display:flex; gap:24px; align-items:center">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Hamburg – storbydagen</h2>
+<p style="font-size:24px; font-weight:800; background:#ffc53d; padding:8px 20px; border-radius:999px; white-space:nowrap">ca. 1 t 15 min</p>
+</div>
+<div style="width:1000px; display:grid; grid-template-columns:1fr 1fr; gap:24px">
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">🚂 Miniatur Wunderland</h3>
+<p style="font-size:30px; line-height:1.4">Verdens største modelljernbane. Bestill tidsluke på forhånd!</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Miniatur+Wunderland+Hamburg" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">⛴️ Havnerundtur</h3>
+<p style="font-size:30px; line-height:1.4">Containerskip, kraner og Speicherstadt – sett fra vannet.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Hamburg+Hafenrundfahrt" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">🎵 Elbphilharmonie Plaza</h3>
+<p style="font-size:30px; line-height:1.4">Utsiktsplattform med 360° utsikt over havna og byen.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Elbphilharmonie+Plaza" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:32px; border-radius:24px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">🚇 Gamle Elbtunnel</h3>
+<p style="font-size:30px; line-height:1.4">Gå under Elben i en tunnel fra 1911 – en liten eventyrtur.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Alter+Elbtunnel+Hamburg" target="_blank" rel="noopener">Se video</a></p>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="lenger" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Litt lenger ut: 45 min – drøye 2 timer</h2>
+<div style="display:flex; gap:32px; align-items:stretch">
+<div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:40px; border-radius:28px; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">🌉</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Fehmarn</h3>
+<p style="font-size:24px; font-weight:800; color:#13706d; align-self:start; background:#cdeeed; padding:6px 18px; border-radius:999px">ca. 45 min</p>
+<p style="font-size:30px; line-height:1.4">Over den ikoniske Fehmarnsund-brua. Meereszentrum med haier og undervannstunnel, og den store Südstrand.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Meereszentrum+Fehmarn" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:40px; border-radius:28px; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">⚓</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Kiel og Laboe</h3>
+<p style="font-size:24px; font-weight:800; color:#13706d; align-self:start; background:#cdeeed; padding:6px 18px; border-radius:999px">ca. 1 t</p>
+<p style="font-size:30px; line-height:1.4">Gå inni ubåten U-995 på stranden i Laboe, og ta heisen opp i marinemonumentet med fjordutsikt.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Laboe+U-995+Marine-Ehrenmal" target="_blank" rel="noopener">Se video</a></p>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:40px; border-radius:28px; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:72px; line-height:1.1">🏰</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Schwerin</h3>
+<p style="font-size:24px; font-weight:800; color:#13706d; align-self:start; background:#cdeeed; padding:6px 18px; border-radius:999px">ca. 1 t 15 min</p>
+<p style="font-size:30px; line-height:1.4">Eventyrslottet på en øy i sjøen. Slottshagen er perfekt for piknik og lek.</p>
+<p class="yt" style="align-self:start; font-size:24px; font-weight:800; line-height:1.2; background:#ffd2c6; color:#b8391f; padding:8px 22px; border-radius:999px">▶ <a href="https://www.youtube.com/results?search_query=Schweriner+Schloss" target="_blank" rel="noopener">Se video</a></p>
+</div>
+</div>
+<p style="font-size:30px; line-height:1.4; color:#fbf3e4; background:#12304a; padding:28px 40px; border-radius:24px">🦒 <b>Safari fra bilen?</b> I Serengeti-Park Hodenhagen, ca. 2 t 15 unna, kjører vi selv gjennom innhegninger med sjiraffer, sebraer og løver. <b>▶ <a href="https://www.youtube.com/results?search_query=Serengeti-Park+Hodenhagen+Safari" target="_blank" rel="noopener">Se video</a></b></p>
+
+</section>
+
+<section class="slide" id="uka" data-transition="fade" style="background:#fbf3e4; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Et forslag til uka</h2>
+<div data-bi="rise" style="--d:0.25s; position:absolute; left:128px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #1f9e9a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 1</p>
+<p style="font-size:64px; line-height:1.1">🧳</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Ankomst</h3>
+<p style="font-size:24px; line-height:1.4">Pakk ut, strandtur og is på promenaden.</p>
+<p style="font-size:24px; font-weight:800; color:#13706d; background:#cdeeed; padding:4px 14px; border-radius:999px">Rolig</p>
+</div>
+<div data-bi="rise" style="--d:0.53s; position:absolute; left:367px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #e8553a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 2</p>
+<p style="font-size:64px; line-height:1.1">🎠</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Hansa-Park</h3>
+<p style="font-size:24px; line-height:1.4">Kom ved åpning. Lur i vogna midt på dagen.</p>
+<p style="font-size:24px; font-weight:800; color:#b8391f; background:#ffd2c6; padding:4px 14px; border-radius:999px">Full dag</p>
+</div>
+<div data-bi="rise" style="--d:0.81s; position:absolute; left:606px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #1f9e9a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 3</p>
+<p style="font-size:64px; line-height:1.1">🏖️</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Strand</h3>
+<p style="font-size:24px; line-height:1.4">Strandkurv og sandslott. Regn? Ostsee-Therme!</p>
+<p style="font-size:24px; font-weight:800; color:#13706d; background:#cdeeed; padding:4px 14px; border-radius:999px">Rolig</p>
+</div>
+<div data-bi="rise" style="--d:1.09s; position:absolute; left:845px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #ffc53d; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 4</p>
+<p style="font-size:64px; line-height:1.1">🏰</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Lübeck</h3>
+<p style="font-size:24px; line-height:1.4">Holstentor, marsipan og Travemünde på hjemveien.</p>
+<p style="font-size:24px; font-weight:800; color:#12304a; background:#ffe8a8; padding:4px 14px; border-radius:999px">Middels</p>
+</div>
+<div data-bi="rise" style="--d:1.37s; position:absolute; left:1084px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #1f9e9a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 5</p>
+<p style="font-size:64px; line-height:1.1">🍓</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Karls</h3>
+<p style="font-size:24px; line-height:1.4">Jordbærgården om morgenen, strand etter lunsj.</p>
+<p style="font-size:24px; font-weight:800; color:#13706d; background:#cdeeed; padding:4px 14px; border-radius:999px">Rolig</p>
+</div>
+<div data-bi="rise" style="--d:1.65s; position:absolute; left:1323px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #e8553a; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 6</p>
+<p style="font-size:64px; line-height:1.1">🚂</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Hamburg</h3>
+<p style="font-size:24px; line-height:1.4">Miniatur Wunderland og havnerundtur.</p>
+<p style="font-size:24px; font-weight:800; color:#b8391f; background:#ffd2c6; padding:4px 14px; border-radius:999px">Full dag</p>
+</div>
+<div data-bi="rise" style="--d:1.93s; position:absolute; left:1562px; top:255px; width:227px; display:flex; flex-direction:column; gap:10px; background:#fffaf2; padding:24px 20px; border-radius:24px; border-top:10px solid #ffc53d; box-shadow:0px 12px 32px rgba(18,48,74,0.10)">
+<p style="font-size:24px; font-weight:800; letter-spacing:2px; color:#13706d">DAG 7</p>
+<p style="font-size:64px; line-height:1.1">🎲</p>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:30px; font-weight:600; line-height:1.2">Fri dag</h3>
+<p style="font-size:24px; line-height:1.4">Fehmarn, Kiel – eller Hansa-Park en gang til?</p>
+<p style="font-size:24px; font-weight:800; color:#12304a; background:#ffe8a8; padding:4px 14px; border-radius:999px">Middels</p>
+</div>
+<p data-bi="fade" style="--d:2.21s; position:absolute; left:128px; top:760px; width:1664px; font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:500; line-height:1.3; color:#12304a">Rytmen: <span style="color:#b8391f">aktiv dag – rolig dag.</span> Toåringen (og vi) takker.</p>
+
+</section>
+
+<section class="slide" id="praktisk" data-transition="fade" style="background:#e3f1f0; color:#12304a; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; gap:40px">
+<h2 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:72px; font-weight:600; line-height:1.1; color:#12304a">Greit å vite før vi bestiller</h2>
+<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px">
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#1f9e9a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Reis før tyskerne</h3>
+<p style="font-size:30px; line-height:1.4">Tysk ferie her: 3. juli–14. august. Siste uka i juni er roligere.</p>
+</div>
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#12304a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Unngå 2.–6. august</h3>
+<p style="font-size:30px; line-height:1.4">Da har alle 16 tyske delstater ferie samtidig.</p>
+</div>
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#e8553a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Strandkurv tidlig</h3>
+<p style="font-size:30px; line-height:1.4">Leies per dag eller uke. Regn også med kurtaxe.</p>
+</div>
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#1f9e9a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Billetter på nett</h3>
+<p style="font-size:30px; line-height:1.4">Hansa-Park har sesong ca. mai–oktober. Prisene her er fra 2026.</p>
+</div>
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#12304a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Frisk Østersjø</h3>
+<p style="font-size:30px; line-height:1.4">Rundt 17 °C i vannet og ca. 21 °C i lufta om sommeren.</p>
+</div>
+<div style="display:flex; flex-direction:column; gap:14px; background:#fffaf2; padding:36px; border-radius:28px; box-shadow:0px 10px 30px rgba(18,48,74,0.08)">
+<div style="width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:#e8553a; border-radius:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#fbf3e4; width:56px; height:56px; flex:none" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+<h3 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:600; line-height:1.2">Følg flaggene</h3>
+<p style="font-size:30px; line-height:1.4">Østavind kan gi farlig understrøm langs Lübecker Bucht.</p>
+</div>
+</div>
+
+</section>
+
+<section class="slide" id="avslutning" data-transition="fade" style="background:linear-gradient(180deg, #12304a 0%, #2c4a72 45%, #e98a5e 78%, #f6b26b 100%); color:#fbf3e4; font-family:'Nunito', Verdana, sans-serif; padding:128px; display:flex; flex-direction:column; align-items:center; gap:24px">
+<iframe class="emb" title="Animasjon" aria-hidden="true" tabindex="-1" sandbox="allow-scripts" style="position:absolute; left:0px; top:480px; width:1920px; height:600px; border:0px" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;color-scheme&quot; content=&quot;light&quot;&gt;&lt;/head&gt;&lt;body&gt;&lt;style&gt;html,body{margin:0;height:100%;overflow:hidden;background:transparent}svg{display:block;width:100%;height:100%}.st{animation:tw 3s ease-in-out infinite}.s2{animation-delay:-1s}.s3{animation-delay:-2s}@keyframes tw{50%{opacity:.2}}.sun{animation:set 16s ease-in-out infinite alternate}@keyframes set{from{transform:translateY(-40px)}to{transform:translateY(110px)}}.sh{animation:sh 2.4s ease-in-out infinite}.sh2{animation-delay:-.8s}.sh3{animation-delay:-1.6s}@keyframes sh{50%{opacity:.25;transform:scaleX(.7)}}.sh,.sh2,.sh3{transform-box:fill-box;transform-origin:center}.wv{animation:mv 9s linear infinite}.wv2{animation-duration:14s}@keyframes mv{to{transform:translateX(-240px)}}.bt{animation:sail 60s linear infinite}@keyframes sail{from{transform:translate(-200px,0)}to{transform:translate(2100px,0)}}.bob{transform-box:fill-box;transform-origin:50% 100%;animation:bob 4s ease-in-out infinite}@keyframes bob{50%{transform:rotate(3deg) translateY(4px)}}&lt;/style&gt;
+&lt;svg viewBox=&quot;0 0 1920 600&quot; preserveAspectRatio=&quot;xMidYMax slice&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+&lt;defs&gt;&lt;clipPath id=&quot;sky&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1920&quot; height=&quot;330&quot;/&gt;&lt;/clipPath&gt;&lt;radialGradient id=&quot;gl&quot;&gt;&lt;stop offset=&quot;0&quot; stop-color=&quot;#ffd27a&quot; stop-opacity=&quot;.8&quot;/&gt;&lt;stop offset=&quot;1&quot; stop-color=&quot;#ffd27a&quot; stop-opacity=&quot;0&quot;/&gt;&lt;/radialGradient&gt;&lt;/defs&gt;
+&lt;g fill=&quot;#fff7e0&quot;&gt;&lt;circle class=&quot;st&quot; cx=&quot;180&quot; cy=&quot;40&quot; r=&quot;3&quot;/&gt;&lt;circle class=&quot;st s2&quot; cx=&quot;420&quot; cy=&quot;90&quot; r=&quot;2.5&quot;/&gt;&lt;circle class=&quot;st s3&quot; cx=&quot;720&quot; cy=&quot;30&quot; r=&quot;3&quot;/&gt;&lt;circle class=&quot;st&quot; cx=&quot;1260&quot; cy=&quot;60&quot; r=&quot;2.5&quot;/&gt;&lt;circle class=&quot;st s2&quot; cx=&quot;1500&quot; cy=&quot;24&quot; r=&quot;3&quot;/&gt;&lt;circle class=&quot;st s3&quot; cx=&quot;1760&quot; cy=&quot;80&quot; r=&quot;2.5&quot;/&gt;&lt;circle class=&quot;st s3&quot; cx=&quot;90&quot; cy=&quot;130&quot; r=&quot;2&quot;/&gt;&lt;circle class=&quot;st&quot; cx=&quot;1850&quot; cy=&quot;150&quot; r=&quot;2&quot;/&gt;&lt;/g&gt;
+&lt;g clip-path=&quot;url(#sky)&quot;&gt;&lt;g class=&quot;sun&quot;&gt;&lt;circle cx=&quot;960&quot; cy=&quot;280&quot; r=&quot;260&quot; fill=&quot;url(#gl)&quot;/&gt;&lt;circle cx=&quot;960&quot; cy=&quot;280&quot; r=&quot;120&quot; fill=&quot;#ffc53d&quot;/&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;rect x=&quot;0&quot; y=&quot;330&quot; width=&quot;1920&quot; height=&quot;270&quot; fill=&quot;#1d3f5e&quot;/&gt;
+&lt;rect x=&quot;0&quot; y=&quot;328&quot; width=&quot;1920&quot; height=&quot;4&quot; fill=&quot;#f6b26b&quot; opacity=&quot;.7&quot;/&gt;
+&lt;g fill=&quot;#ffc53d&quot;&gt;&lt;rect class=&quot;sh&quot; x=&quot;850&quot; y=&quot;350&quot; width=&quot;220&quot; height=&quot;8&quot; rx=&quot;4&quot;/&gt;&lt;rect class=&quot;sh sh2&quot; x=&quot;880&quot; y=&quot;382&quot; width=&quot;160&quot; height=&quot;7&quot; rx=&quot;3.5&quot;/&gt;&lt;rect class=&quot;sh sh3&quot; x=&quot;905&quot; y=&quot;414&quot; width=&quot;110&quot; height=&quot;6&quot; rx=&quot;3&quot;/&gt;&lt;rect class=&quot;sh&quot; x=&quot;925&quot; y=&quot;446&quot; width=&quot;70&quot; height=&quot;5&quot; rx=&quot;2.5&quot;/&gt;&lt;rect class=&quot;sh sh2&quot; x=&quot;940&quot; y=&quot;478&quot; width=&quot;40&quot; height=&quot;4&quot; rx=&quot;2&quot;/&gt;&lt;/g&gt;
+&lt;g stroke=&quot;#5b86a8&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot; fill=&quot;none&quot; opacity=&quot;.6&quot;&gt;&lt;path class=&quot;wv&quot; d=&quot;M0 400h60M240 400h60M480 400h60M720 400h60M1200 400h60M1440 400h60M1680 400h60M1920 400h60M2160 400h60&quot;/&gt;&lt;path class=&quot;wv wv2&quot; d=&quot;M120 470h80M360 470h80M600 470h80M1320 470h80M1560 470h80M1800 470h80M2040 470h80&quot;/&gt;&lt;path class=&quot;wv&quot; d=&quot;M40 540h90M280 540h90M520 540h90M760 540h90M1240 540h90M1480 540h90M1720 540h90M1960 540h90&quot;/&gt;&lt;/g&gt;
+&lt;g class=&quot;bt&quot;&gt;&lt;g transform=&quot;translate(0 290)&quot;&gt;&lt;g class=&quot;bob&quot;&gt;&lt;path d=&quot;M20 0L20 -130L80 -8Z&quot; fill=&quot;#12304a&quot;/&gt;&lt;path d=&quot;M16 -110L16 -8L-30 -8Z&quot; fill=&quot;#12304a&quot;/&gt;&lt;path d=&quot;M-40 0H100L84 22H-24Z&quot; fill=&quot;#12304a&quot;/&gt;&lt;/g&gt;&lt;/g&gt;&lt;/g&gt;
+&lt;/svg&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+<h1 style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:120px; font-weight:700; line-height:1.05; color:#fbf3e4; text-align:center">Så – skal vi?</h1>
+<p style="font-family:'Fredoka', 'Trebuchet MS', sans-serif; font-size:40px; font-weight:500; line-height:1.3; color:#ffc53d; text-align:center">Én base ved stranden. Sju dager. Fem fornøyde.</p>
+
+</section>
+
+</div>
+</main>
+<p id="hint">📱 Snu telefonen på tvers for større bilder. Sveip eller trykk for å bla.</p>
+<aside id="notes" aria-live="polite"><h2>Om dette bildet</h2><p id="notetext"></p></aside>
+<nav id="bar" aria-label="Bla i presentasjonen">
+<div id="progress"></div>
+<button id="prev" aria-label="Forrige bilde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+<span id="count" aria-live="polite">1 / 16</span>
+<button id="next" aria-label="Neste bilde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+<span id="title"></span>
+<button id="notebtn" aria-expanded="false" aria-controls="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lbl">Mer om bildet</span></button>
+<button id="fsbtn" aria-label="Fullskjerm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+</nav>
+<script>
+(function(){
+var NOTES=["Velkommen til sommerferien 2027! Tanken: én uke i Sierksdorf ved Østersjøen i Schleswig-Holstein. Først litt om hvor det ligger og hvordan vi kommer oss dit, så et dypdykk i alt vi kan finne på – og til slutt et forslag til hvordan uka kan se ut.", "Sierksdorf ligger på østkysten av Schleswig-Holstein, i Lübecker Bucht, rundt 30 km nord for Lübeck. Hansa-Park ligger i selve Sierksdorf – Tysklands eneste fornøyelsespark rett ved sjøen. Herfra når vi Lübeck, Travemünde, Fehmarn, Kiel, Hamburg og Schwerin på mellom en halvtime og drøye timen.", "To realistiske måter å komme seg dit på. Nattferja Oslo–Kiel er den mest avslappede med en toåring: vi går om bord på ettermiddagen, sover i lugar og kjører ca. en time fra Kiel. Alternativet er å kjøre hele veien gjennom Sverige og Danmark – rundt 10–11 timer med ferjer. Tunnelen under Femern Bælt blir ikke ferdig før tidligst 2029, så i 2027 blir det ferje fra Rødby til Puttgarden. Sjekk ruter og priser for 2027 når de legges ut.", "Aldersspennet fra 2 til 12 år er det viktigste å planlegge etter. Toåringen trenger lur og rolige stunder. Verken tiåringen eller tolvåringen er spesielt glade i fart og spenning – de liker de rolige karusellene, dyr og bading best, og tolvåringen gjerne litt byliv. Derfor forslaget: stranden som fast base, og store utflukter bare annenhver dag.", "Nå over til det morsomme: hva kan vi faktisk gjøre? Seks kategorier – fornøyelsespark, strand, regnværsaktiviteter, dyr, byer og dagsturer med bil.", "Hansa-Park er selve trumfkortet med Sierksdorf: parken ligger i bygda, rett ved stranden, med over 125 attraksjoner i 11 temaverdener. Parken har store berg-og-dalbaner, men minst like mye rolig moro – og det er den vi går for: båtturen gjennom «Blumenmeer», parktoget som går rundt i parken, karuseller, show og 4D-kino. Toåringen har innendørslekelandet Piraten Camp og egne småbarnskaruseller. Sjekk showprogrammet for 2027 før vi drar. Prisene er fra 2026 – 2027-prisene kommer i løpet av vinteren. Tips: kjøp billett på nett og kom ved åpning.", "Hele kysten her er én lang sandstrand. I Sierksdorf og nabobyen Haffkrug er det roligere, mens Scharbeutz og Timmendorfer Strand har livlige promenader. Begge har fått nye sjøbroer de siste årene. Og vi må prøve en strandkorb – den klassiske strandkurven med tak som gir le for vind og sol. Den leies per dag eller per uke.", "Plan B for regnværsdager. Ostsee-Therme i Scharbeutz ligger rett ved stranden: en 145 meter lang sklie, turbosklie, strømkanal og eget babybasseng på 34 grader. Sea Life i Timmendorfer Strand er et fint akvarium for en halv dag. Og i Weissenhäuser Strand, en drøy halvtime nordover, ligger et subtropisk badeland.", "For toåringen er Karls Erlebnis-Dorf i Warnsdorf trolig en vinner: en slags jordbærgård-fornøyelsespark med gratis inngang, der man betaler per aktivitet. Nær stranden ligger også Vogelpark Niendorf. Lenger unna: Wildpark Eekholt med skogsdyr og rovfuglshow, Arche Warder med gamle husdyrraser, og Tierpark Hagenbeck i Hamburg. Sjekk åpningstider og priser for 2027 før vi drar.", "Med bil er radiusen stor. Alt i Lübecker Bucht er innen en halvtime. Fehmarn, Kiel og dyreparkene i innlandet tar under en time, Hamburg og Schwerin litt over. Serengeti-Park i Hodenhagen ligger litt over to timer sørover – safari med egen bil. Tidene er omtrentlige og uten kø – i fellesferien kan motorveiene være travle.", "Lübeck er en halvtime unna: gamlebyen er på UNESCOs verdensarvliste, Holstentor er byens symbol, og Niederegger er stedet for marsipan – med kafé og et lite marsipanmuseum. En båttur rundt bykjernen er fin med små barn. Travemünde er Lübecks badeby ved utløpet av Trave: seilskuta Passat, de store Skandinavia-ferjene som glir forbi promenaden, og en liten ferje over til Priwall. Lett å kombinere begge på én dag.", "Hamburg er en perfekt storbydag, særlig for 10- og 12-åringen. Miniatur Wunderland er verdens største modelljernbane og et must – bestill tidsluke på nett i god tid, det blir fullt i ferien. Kombiner med havnerundtur fra Landungsbrücken, en tur ned i den gamle Elbtunnelen fra 1911, og utsikten fra Elbphilharmonie Plaza. Tips: parker på en Park and Ride i utkanten og ta T-banen inn.", "Hvis vi vil lenger ut: Fehmarn nås på rundt tre kvarter over Fehmarnsund-brua, med Meereszentrum (haier og undervannstunnel) og den lange Südstrand. Kiel og Laboe tar omtrent en time – der kan barna gå inni ubåten U-995 på stranden. Schwerin, med eventyrslottet på en øy, er rundt en time og et kvarter unna. Lengst unna er Serengeti-Park i Hodenhagen, litt over to timer sørover: der kjører man sin egen bil gjennom store innhegninger med sjiraffer, sebraer, antiloper og løver. En lang dag, men kanskje verdt det for dyreglade barn. Kjøretidene er omtrentlige.", "Dette er bare et utkast. Poenget er rytmen: en aktiv dag, så en rolig dag ved stranden. Hansa-Park legger vi tidlig i uka, så vi kan dra tilbake på den frie dagen om alle ble hekta. Er det meldt regn, bytter vi strandagen med Ostsee-Therme. Hamburg er den lengste turen, så den passer når alle er uthvilt.", "Viktigste praktiske punkt: Schleswig-Holstein har sommerferie fra 3. juli til 14. august 2027, og 2.–6. august har alle de 16 tyske delstatene ferie samtidig – da er det fullest. Reiser vi tidlig i juli eller siste uka i juni, blir det roligere. Strandkurv kan leies per dag eller uke, og det kommer kurtaxe i tillegg. Hansa-Park-prisene er fra 2026. Og: følg flaggene på stranden – ved østavind kan det være farlig understrøm.", "Oppsummert: Sierksdorf gir oss strand, Hansa-Park og rolige dager rett utenfor døra – og Lübeck, Hamburg og Fehmarn innen kort kjøretur. Neste steg er å velge uke, sjekke ferge og overnatting, og bestille strandkurv. Hva tenker du?"];
+var stage=document.getElementById('stage'),deck=document.getElementById('deck'),slides=[].slice.call(deck.querySelectorAll('.slide'));
+var n=slides.length,cur=-1;
+var $=function(id){return document.getElementById(id)};
+var notes=$('notes'),hint=$('hint');
+slides.forEach(function(s,i){s.setAttribute('role','group');s.setAttribute('aria-roledescription','lysbilde');s.setAttribute('aria-label',(i+1)+' av '+n);var h=s.querySelector('h1,h2');s.dataset.t=h?h.textContent.trim():''});
+function fit(){
+  var W=stage.clientWidth,H=stage.clientHeight,pad=W<700?8:32;
+  var k=Math.min((W-pad*2)/1920,(H-pad*2)/1080);
+  var w=1920*k,h=1080*k,portrait=H>W*1.2;
+  var x=(W-w)/2,y=portrait?Math.max(pad,(H-h)/2-40):(H-h)/2;
+  deck.style.transform='translate('+x+'px,'+y+'px) scale('+k+')';
+  deck.style.borderRadius=(12/k)+'px';
+  hint.style.top=(stage.getBoundingClientRect().top+y+h+18)+'px';
+}
+function go(i,fromHash){
+  i=Math.max(0,Math.min(n-1,i));
+  if(i===cur)return;
+  var back=i<cur;
+  slides.forEach(function(s,j){s.classList.remove('was');if(j!==i&&s.classList.contains('on')){s.classList.remove('on');if(!back)s.classList.add('was')}});
+  var s=slides[i];s.classList.remove('on');void s.offsetWidth;s.classList.add('on');
+  cur=i;
+  $('count').textContent=(i+1)+' / '+n;
+  $('progress').style.width=((i+1)/n*100)+'%';
+  $('prev').disabled=i===0;$('next').disabled=i===n-1;
+  $('title').textContent=s.dataset.t;
+  $('notetext').textContent=NOTES[i]||'Ingen ekstra notater til dette bildet.';
+  if(!fromHash)history.replaceState(null,'','#'+(i+1));
+}
+$('prev').onclick=function(){go(cur-1)};
+$('next').onclick=function(){go(cur+1)};
+$('notebtn').onclick=function(){var o=notes.classList.toggle('open');this.setAttribute('aria-expanded',o)};
+var fsOK=document.fullscreenEnabled||document.webkitFullscreenEnabled;
+if(!fsOK)$('fsbtn').style.display='none';
+$('fsbtn').onclick=function(){var d=document,e=d.documentElement;if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}else{(e.requestFullscreen||e.webkitRequestFullscreen).call(e)}};
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key==='PageDown'||(e.key===' '&&e.target===document.body)){e.preventDefault();go(cur+1)}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(n-1);
+  else if(e.key==='n'||e.key==='N')$('notebtn').click();
+  else if(e.key==='Escape')notes.classList.remove('open');
+});
+var sx=null,sy=null;
+stage.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+stage.addEventListener('touchend',function(e){if(sx===null||e.target.closest('a'))return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){go(cur+(dx<0?1:-1));e.preventDefault()}sx=null});
+stage.addEventListener('click',function(e){if(e.target.closest('a'))return;var r=stage.getBoundingClientRect();go(cur+((e.clientX-r.left)<r.width/3?-1:1))});
+addEventListener('resize',fit);
+addEventListener('hashchange',function(){var h=parseInt(location.hash.slice(1),10);if(h)go(h-1,true)});
+fit();
+var h0=parseInt(location.hash.slice(1),10);go(h0?h0-1:0,true);
+})();
+</script>
+</body>
+</html>
